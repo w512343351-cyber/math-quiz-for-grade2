@@ -10,11 +10,12 @@ from datetime import datetime
 st.set_page_config(
     page_title="わくわく算数ランド",
     page_icon="🧸",
-    layout="wide"
+    layout="wide",
+    initial_sidebar_state="auto"
 )
 
 # -------------------------------
-# カスタムCSS（全面最適化）
+# カスタムCSS（全面最適化 + モバイル対応）
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Comic+Neue:wght@400;700&display=swap');
@@ -28,13 +29,13 @@ st.markdown("""
     }
 
     .main > .block-container {
-        padding: 1rem 2rem 2rem 2rem;
+        padding: 1rem 1rem 2rem 1rem;
         max-width: 1200px;
         margin: 0 auto;
     }
 
     .rainbow-title {
-        font-size: 3.5rem;
+        font-size: 3rem;
         font-weight: bold;
         background: linear-gradient(45deg, #ff6b6b, #feca57, #48dbfb, #ff9ff3);
         -webkit-background-clip: text;
@@ -45,7 +46,7 @@ st.markdown("""
     }
 
     .sub-title {
-        font-size: 1.5rem;
+        font-size: 1.2rem;
         color: #ff9f43;
         text-align: center;
         margin-top: 0;
@@ -77,6 +78,23 @@ st.markdown("""
     .row-widget.stHorizontal {
         gap: 3px !important;
         margin-bottom: 5px !important;
+        flex-wrap: wrap !important;
+    }
+
+    /* モバイル対応：画面幅が600px以下の場合 */
+    @media (max-width: 600px) {
+        .rainbow-title { font-size: 2.2rem; }
+        .sub-title { font-size: 1rem; }
+        .stButton > button {
+            font-size: 1.5rem !important;
+            height: 3.2rem !important;
+        }
+        .question-box { font-size: 1.5rem; padding: 1rem; }
+        .answer-display { font-size: 2rem; padding: 10px; }
+        .character-emoji { font-size: 5rem; padding: 15px; }
+        .character-name { font-size: 1.8rem; }
+        .puzzle-cell { font-size: 2rem; min-width: 60px; min-height: 60px; }
+        .collection-box { font-size: 1.2rem; padding: 8px 12px; }
     }
 
     /* サイドバー */
@@ -91,13 +109,13 @@ st.markdown("""
     .character-container {
         background: linear-gradient(135deg, #fff9ef, #ffe6f0);
         border-radius: 50px;
-        padding: 25px;
+        padding: 20px;
         margin: 20px 0 30px 0;
         border: 5px solid #ffb6c1;
         box-shadow: 0 20px 30px rgba(255, 105, 180, 0.2);
         display: flex;
         align-items: center;
-        gap: 30px;
+        gap: 20px;
         flex-wrap: wrap;
         position: relative;
         overflow: hidden;
@@ -242,7 +260,7 @@ st.markdown("""
     .puzzle-container {
         background: #fef2e7;
         border-radius: 60px;
-        padding: 25px;
+        padding: 20px;
         margin: 20px 0;
         border: 5px solid #feca57;
         box-shadow: 0 10px 0 #b38f40, 0 15px 25px rgba(0,0,0,0.1);
@@ -250,18 +268,18 @@ st.markdown("""
 
     .puzzle-grid {
         display: grid;
-        gap: 12px;
+        gap: 8px;
         justify-content: center;
     }
 
     .puzzle-cell {
         background: #fff;
         border-radius: 20px;
-        padding: 10px;
+        padding: 8px;
         font-size: 2.5rem;
         border: 3px solid #ff9ff3;
-        min-width: 80px;
-        min-height: 80px;
+        min-width: 70px;
+        min-height: 70px;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -285,8 +303,8 @@ st.markdown("""
     .sticker {
         background: linear-gradient(145deg, #ffd700, #ffb347);
         border-radius: 50%;
-        width: 200px;
-        height: 200px;
+        width: 180px;
+        height: 180px;
         margin: 20px auto;
         display: flex;
         flex-direction: column;
@@ -298,7 +316,7 @@ st.markdown("""
     }
 
     .sticker-text {
-        font-size: 2rem;
+        font-size: 1.5rem;
         color: white;
         text-shadow: 2px 2px 0 #b37400;
     }
@@ -310,16 +328,16 @@ st.markdown("""
         right: 20px;
         background: rgba(255, 255, 255, 0.95);
         border-radius: 50px;
-        padding: 10px 18px;
+        padding: 8px 15px;
         box-shadow: 0 10px 25px rgba(0,0,0,0.2);
         border: 3px solid #ffb6c1;
         backdrop-filter: blur(10px);
         z-index: 1000;
         display: flex;
         align-items: center;
-        gap: 8px;
+        gap: 5px;
         font-size: 1.5rem;
-        max-width: 300px;
+        max-width: 80vw;
         overflow-x: auto;
         white-space: nowrap;
         cursor: pointer;
@@ -347,7 +365,7 @@ st.markdown("""
         top: 50%;
         left: 50%;
         transform: translate(-50%, -50%);
-        font-size: 6rem;
+        font-size: 5rem;
         animation: starPop 0.8s ease-out forwards;
         pointer-events: none;
         z-index: 9999;
@@ -361,12 +379,6 @@ st.markdown("""
         padding: 1rem;
         background: #fff9e6;
         border-radius: 50px 50px 0 0;
-    }
-
-    @media (max-width: 768px) {
-        .character-container { flex-direction: column; text-align: center; }
-        .rainbow-title { font-size: 2.5rem; }
-        .question-box { font-size: 1.5rem; padding: 1rem; }
     }
 </style>
 """, unsafe_allow_html=True)
@@ -641,7 +653,7 @@ with st.container():
     st.markdown('</div>', unsafe_allow_html=True)
 
 # ==============================================
-# 新規作成ボタン
+# 新規作成ボタン（★ ここで古い入力をリセット）
 # ==============================================
 col1, col2, col3 = st.columns([1, 2, 1])
 with col2:
@@ -662,6 +674,11 @@ with col2:
             random.shuffle(available_emojis)
             st.session_state["puzzle_pieces"] = available_emojis[:n]
             st.session_state["puzzle_filled"] = [False] * n
+
+            # ★ 以前の入力値をすべてクリア
+            keys_to_delete = [key for key in st.session_state.keys() if key.startswith("input_")]
+            for key in keys_to_delete:
+                del st.session_state[key]
 
             if "チャレンジ" in mode:
                 st.rerun()
@@ -724,7 +741,7 @@ else:  # チャレンジモード
                 .puzzle-grid-{total} {{
                     display: grid;
                     grid-template-columns: repeat({cols}, 1fr);
-                    gap: 10px;
+                    gap: 8px;
                     justify-content: center;
                 }}
                 </style>
@@ -818,10 +835,11 @@ else:  # チャレンジモード
                     return options[:5]
 
                 time_options = generate_time_options(correct_answer)
-                # 将选项排成2列
-                for i in range(0, len(time_options), 2):
-                    row_cols = st.columns(2)
-                    for j in range(2):
+                # 将选项排成2列（自动换行）
+                cols_per_row = 2
+                for i in range(0, len(time_options), cols_per_row):
+                    row_cols = st.columns(cols_per_row)
+                    for j in range(cols_per_row):
                         idx = i + j
                         if idx < len(time_options):
                             with row_cols[j]:
