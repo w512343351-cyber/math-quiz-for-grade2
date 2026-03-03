@@ -354,7 +354,7 @@ st.markdown("""
 # -------------------------------
 # タイトル
 st.markdown('<p class="rainbow-title">🧸 わくわく算数ランド 🎈</p>', unsafe_allow_html=True)
-st.markdown('<p class="sub-title">✨ キャラクターをそだてながら さんすうれんしゅう！ ✨</p>')
+st.markdown('<p class="sub-title">✨ キャラクターをそだてながら さんすうれんしゅう！ ✨</p>', unsafe_allow_html=True)
 st.markdown("---")
 
 # -------------------------------
