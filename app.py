@@ -60,11 +60,11 @@ st.markdown("""
         font-weight: bold;
         border-radius: 60px !important;
         border: 3px solid white;
-        padding: 0.5rem 0.2rem !important;
+        padding: 0.3rem 0.1rem !important;
         box-shadow: 0 8px 0 #b13a9b, 0 10px 20px rgba(0,0,0,0.1);
         transition: 0.1s ease;
         width: 100%;
-        height: 4.5rem !important;
+        height: 4rem !important;
         line-height: 1.2 !important;
         letter-spacing: 2px;
     }
@@ -73,9 +73,10 @@ st.markdown("""
         box-shadow: 0 4px 0 #b13a9b, 0 10px 20px rgba(0,0,0,0.1);
     }
 
-    /* 数字键盘的特殊按钮（删除/清除/提交）可能稍小 */
-    .stButton > button.small-btn {
-        font-size: 1.5rem !important;
+    /* 水平方向の列の間隔を縮める（数字キーボードのボタン間隔を狭くする） */
+    .row-widget.stHorizontal {
+        gap: 3px !important;
+        margin-bottom: 5px !important;
     }
 
     /* サイドバー */
@@ -367,36 +368,6 @@ st.markdown("""
         .rainbow-title { font-size: 2.5rem; }
         .question-box { font-size: 1.5rem; padding: 1rem; }
     }
-/* 水平方向の列の間隔を縮める（数字キーボードのボタン間隔を狭くする） */
-.row-widget.stHorizontal {
-    gap: 3px !important;
-}
-
-/* ボタン内の余白を調整してコンパクトに */
-.stButton > button {
-    padding: 0.3rem 0.1rem !important;
-}
-/* 数字キーボードのための特別なスタイル */
-div[data-testid="column"]:has(> div > button) {
-    padding: 0 2px !important;
-}
-
-.stButton > button {
-    width: 100% !important;
-    height: 4rem !important;
-    font-size: 2rem !important;
-    padding: 0 !important;
-    margin: 0 !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-}
-
-/* 数字キーボードの行の間隔 */
-.row-widget.stHorizontal {
-    gap: 5px !important;
-    margin-bottom: 5px !important;
-}
 </style>
 """, unsafe_allow_html=True)
 
@@ -723,35 +694,6 @@ if "れんしゅう" in mode:
     else:
         st.info("👈 もんだいをつくってね")
 
-else:
-# ==============================================
-# モード分岐
-# ==============================================
-if "れんしゅう" in mode:
-    # ---------- 練習モード（一覧表示）----------
-    if st.session_state["questions"]:
-        st.markdown("## 📚 きょうのもんだい")
-        for i, q in enumerate(st.session_state["questions"], 1):
-            st.markdown(f"**{i}.** {q}")
-
-        if show_answers:
-            st.markdown("## 🔍 こたえ")
-            for i, a in enumerate(st.session_state["answers"], 1):
-                st.markdown(f"**{i}.** {a}")
-
-        # ダウンロード
-        text_content = "【れんしゅうもんだい】\n\n"
-        for i, q in enumerate(st.session_state["questions"], 1):
-            text_content += f"{i}. {q}\n"
-        if show_answers:
-            text_content += "\n【こたえ】\n"
-            for i, a in enumerate(st.session_state["answers"], 1):
-                text_content += f"{i}. {a}\n"
-
-        st.download_button("📥 プリントにほぞん", text_content, file_name="renshu.txt")
-    else:
-        st.info("👈 もんだいをつくってね")
-
 else:  # チャレンジモード
     if not st.session_state["questions"]:
         st.info("🎲 もんだいをつくってはじめよう！")
@@ -849,7 +791,6 @@ else:  # チャレンジモード
             # ---------- 時間題（选项按钮） ----------
             elif qtype == "time":
                 def generate_time_options(correct):
-                    import re
                     match = re.match(r'(\d+)時(\d+)分', correct)
                     if not match:
                         return [correct]
