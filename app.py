@@ -676,7 +676,7 @@ with col2:
             st.session_state["puzzle_filled"] = [False] * n
 
             # 以前の入力値をすべてクリア
-            keys_to_delete = [key for key in st.session_state.keys() if key.startswith("input_")]
+            keys_to_delete = [key for key in st.session_state.keys() if key.startswith("input_") or key.startswith("time_options_")]
             for key in keys_to_delete:
                 del st.session_state[key]
 
@@ -805,7 +805,7 @@ else:  # チャレンジモード
                             st.session_state["current_q"] += 1
                             st.rerun()
 
-            # ---------- 時間題（选项按钮 - 最终稳定版） ----------
+            # ---------- 時間題（选项按钮 - 2列grid布局） ----------
             elif qtype == "time":
                 # 生成选项函数（确保正确答案始终在选项中）
                 def generate_time_options(correct):
@@ -844,7 +844,7 @@ else:  # チャレンジモード
                     st.session_state[options_key] = generate_time_options(correct_answer)
                 time_options = st.session_state[options_key]
 
-                # 将选项排成2列
+                # 将选项排成2列（每行两个）
                 for i in range(0, len(time_options), 2):
                     row_cols = st.columns(2)
                     for j in range(2):
