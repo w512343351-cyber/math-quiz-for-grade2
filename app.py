@@ -805,56 +805,44 @@ else:  # チャレンジモード
                             st.session_state["current_q"] += 1
                             st.rerun()
 
-            # ---------- 時間題（选项按钮 - 最终修复版） ----------
+            # ---------- 時間題（选项按钮 - 最终稳定版） ----------
             elif qtype == "time":
+                # 生成选项函数（确保正确答案始终在选项中）
                 def generate_time_options(correct):
-                    # 始终包含正确答案
-                    options = [correct]
+                    options = [correct]  # 始终包含正确答案
                     match = re.match(r'(\d+)時(\d+)分', correct)
                     if not match:
                         return options
                     hour = int(match.group(1))
                     minute = int(match.group(2))
-
-                    # 生成干扰项池
-                    distractors = set()
                     minute_choices = [0, 15, 30, 45]
                     other_hours = [h for h in range(1, 13) if h != hour]
                     other_minutes = [m for m in minute_choices if m != minute]
-
-                    # 添加同小时不同分钟
+                    distractors = set()
+                    # 同小时不同分钟
                     for m in other_minutes:
                         distractors.add(f"{hour}時{m}分")
-                    # 添加不同小时同分钟（最多2个）
+                    # 不同小时同分钟
                     for h in random.sample(other_hours, min(2, len(other_hours))):
                         distractors.add(f"{h}時{minute}分")
-                    # 如果干扰项不足3个，再补充一些不同小时不同分钟
+                    # 如果不足3个，补充不同小时不同分钟
                     while len(distractors) < 3:
                         h = random.choice(other_hours)
                         m = random.choice(other_minutes)
                         distractors.add(f"{h}時{m}分")
-
-                    # 从干扰项池中随机选择3个（或不足则全取）
+                    # 随机取3个干扰项
                     dist_list = list(distractors)
                     random.shuffle(dist_list)
-                    selected_distractors = dist_list[:3]
-                    options.extend(selected_distractors)
-
-                    # 如果选项少于4个，补充随机项（但通常已经足够）
-                    while len(options) < 4:
-                        rand_h = random.randint(1, 12)
-                        rand_m = random.choice(minute_choices)
-                        opt = f"{rand_h}時{rand_m}分"
-                        if opt not in options:
-                            options.append(opt)
-
-                    # 随机打乱顺序，确保正确答案不一定在第一位
+                    options.extend(dist_list[:3])
+                    # 最终打乱顺序
                     random.shuffle(options)
                     return options
 
-                time_options = generate_time_options(correct_answer)
-                # 可选：调试时查看选项列表
-                # st.write("选项:", time_options)
+                # 为当前问题存储选项列表，避免每次rerun重新生成
+                options_key = f"time_options_{current}"
+                if options_key not in st.session_state:
+                    st.session_state[options_key] = generate_time_options(correct_answer)
+                time_options = st.session_state[options_key]
 
                 # 将选项排成2列
                 for i in range(0, len(time_options), 2):
@@ -874,17 +862,26 @@ else:  # チャレンジモード
                                             st.balloons()
                                             st.markdown(f'<div class="correct-msg" style="font-size:2rem;">🌈✨ パズルかんせい！ ✨🌈</div>', unsafe_allow_html=True)
                                             st.session_state["current_q"] = total
+                                            # 清理存储
+                                            if options_key in st.session_state:
+                                                del st.session_state[options_key]
                                             st.rerun()
                                         else:
                                             st.markdown('<div class="correct-msg">🎉 せいかい！ すごい！</div>', unsafe_allow_html=True)
                                             if current + 1 < total:
                                                 st.session_state["current_q"] += 1
+                                                # 清理存储
+                                                if options_key in st.session_state:
+                                                    del st.session_state[options_key]
                                                 st.rerun()
                                     else:
                                         st.markdown(f'<div class="wrong-msg">😢 ざんねん... ただしいこたえは {correct_answer}</div>', unsafe_allow_html=True)
                 if st.button("⏩ とばす", key=f"skip_time_{current}"):
                     if current + 1 < total:
                         st.session_state["current_q"] += 1
+                        # 清理存储
+                        if options_key in st.session_state:
+                            del st.session_state[options_key]
                         st.rerun()
 
             # ---------- 数值题（优化后的数字键盘） ----------
