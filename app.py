@@ -184,26 +184,26 @@ st.markdown("""
         color: white;
         text-shadow: 2px 2px 0 #b37400;
     }
-    /* ★★★ 右下固定のキャラクター図鑑 ★★★ */
+    /* ★★★ 右下固定の庭（重複なし）★★★ */
     .garden-fixed {
         position: fixed;
         bottom: 20px;
         right: 20px;
-        width: 250px;
+        width: 200px;
         background: rgba(255, 255, 255, 0.95);
         border-radius: 20px;
         padding: 15px;
         box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-        border: 3px solid #ffb6c1;
+        border: 3px solid #90be6d;
         z-index: 1000;
         backdrop-filter: blur(5px);
     }
     .garden-title {
-        font-size: 1.2rem;
-        color: #ff69b4;
+        font-size: 1rem;
+        color: #2d6a4f;
         font-weight: bold;
         text-align: center;
-        margin-bottom: 10px;
+        margin-bottom: 8px;
     }
     .garden-grid {
         display: grid;
@@ -211,28 +211,19 @@ st.markdown("""
         gap: 8px;
     }
     .garden-item {
-        background-color: #f9f9f9;
-        border-radius: 15px;
-        padding: 10px;
+        background-color: #fff9e6;
+        border-radius: 50%;
+        padding: 5px;
         text-align: center;
-        border: 2px solid #ffd700;
-        transition: 0.2s;
-    }
-    .garden-item:hover {
-        transform: scale(1.05);
-        background-color: #fff3e6;
+        border: 2px solid #90be6d;
+        aspect-ratio: 1/1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
     }
     .garden-emoji {
-        font-size: 2rem;
-    }
-    .garden-name {
-        font-size: 0.8rem;
-        color: #555;
-    }
-    .garden-count {
-        font-size: 0.7rem;
-        color: #ff69b4;
-        font-weight: bold;
+        font-size: 1.8rem;
     }
     .footer {
         text-align: center;
@@ -471,7 +462,6 @@ if "questions" not in st.session_state:
         "おおきなにわとり": 0,
         "フェニックス": 0
     }
-    st.session_state["total_hatched"] = 0  # 累計孵化数
 
 # -------------------------------
 # 現在のキャラクターを取得
@@ -484,7 +474,6 @@ if current_char != st.session_state["prev_character"]:
     st.balloons()
     # 新しいキャラクターを図鑑に追加
     st.session_state["character_collection"][current_char] += 1
-    st.session_state["total_hatched"] += 1
     st.session_state["prev_character"] = current_char
 
 # -------------------------------
@@ -686,45 +675,28 @@ else:
                 st.rerun()
 
 # ==============================================
-# ★★★ 右下固定のキャラクター図鑑（庭）★★★
+# ★★★ 右下固定の庭（重複なし・絵だけ）★★★
 # ==============================================
 st.markdown("""
 <div class="garden-fixed">
-    <div class="garden-title">🌸 そだてたキャラクターたち 🌸</div>
+    <div class="garden-title">🌸 みんなの庭 🌸</div>
     <div class="garden-grid">
 """, unsafe_allow_html=True)
 
-# 図鑑の内容を動的に生成
+# 育成済みのキャラクターを1種類ずつ表示（重複なし）
 for char_name, char_data in CHARACTERS.items():
     count = st.session_state["character_collection"].get(char_name, 0)
     if count > 0:
         st.markdown(f"""
         <div class="garden-item">
             <div class="garden-emoji">{char_data['emoji']}</div>
-            <div class="garden-name">{char_name}</div>
-            <div class="garden-count">×{count}</div>
-        </div>
-        """, unsafe_allow_html=True)
-
-# まだ一度も育てたことがないキャラクターは？マークで表示
-for char_name, char_data in CHARACTERS.items():
-    count = st.session_state["character_collection"].get(char_name, 0)
-    if count == 0:
-        st.markdown(f"""
-        <div class="garden-item" style="opacity: 0.5;">
-            <div class="garden-emoji">❓</div>
-            <div class="garden-name">{char_name}</div>
-            <div class="garden-count">×0</div>
         </div>
         """, unsafe_allow_html=True)
 
 st.markdown("""
     </div>
-    <div style="text-align: center; margin-top: 10px; font-size: 0.9rem; color: #ff69b4;">
-        これまでにそだった数: {} こ
-    </div>
 </div>
-""".format(st.session_state["total_hatched"]), unsafe_allow_html=True)
+""", unsafe_allow_html=True)
 
 # -------------------------------
 st.markdown("---")
