@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import streamlit as st
 import random
+import math
 from datetime import datetime
 
 # -------------------------------
@@ -75,6 +76,38 @@ st.markdown("""
         text-align: center;
         font-size: 1.5rem;
     }
+    .puzzle-container {
+        background-color: #faf0e6;
+        border-radius: 30px;
+        padding: 20px;
+        margin: 20px 0;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    .puzzle-grid {
+        display: grid;
+        gap: 10px;
+        justify-content: center;
+        margin: 10px 0;
+    }
+    .puzzle-cell {
+        background-color: #f5f5f5;
+        border-radius: 15px;
+        padding: 15px;
+        text-align: center;
+        font-size: 2.5rem;
+        border: 3px solid #ff9ff3;
+        min-width: 80px;
+        min-height: 80px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        transition: 0.3s;
+    }
+    .puzzle-cell.filled {
+        background-color: #fff3e6;
+        transform: scale(1.05);
+    }
     .footer {
         text-align: center;
         color: #aaa;
@@ -138,6 +171,28 @@ with st.sidebar:
     # 練習モード用：答え表示
     if "れんしゅう" in mode:
         show_answers = st.toggle("✨ こたえをみる", value=True)
+
+# -------------------------------
+# 絵文字リスト（パズルピースに使う）
+EMOJI_LIST = [
+    "🐶", "🐱", "🐭", "🐹", "🐰", "🦊", "🐻", "🐼", "🐨", "🐸",
+    "🐒", "🐔", "🐧", "🐦", "🐤", "🐣", "🐥", "🐺", "🐗", "🐴",
+    "🦄", "🐝", "🐛", "🐌", "🐞", "🐜", "🦗", "🕷️", "🦂", "🐢",
+    "🐍", "🦎", "🐙", "🦑", "🦐", "🦞", "🐠", "🐟", "🐡", "🐬",
+    "🐳", "🐋", "🦈", "🐊", "🐅", "🐆", "🦓", "🦍", "🦧", "🐘",
+    "🦛", "🦏", "🐪", "🐫", "🦒", "🦘", "🦡", "🐃", "🐂", "🐄",
+    "🐎", "🐖", "🐏", "🐑", "🦙", "🐐", "🦌", "🐕", "🐩", "🐈",
+    "🕊️", "🐇", "🦝", "🦔", "🦦", "🦥", "🐁", "🐀", "🐿️", "🦔",
+    "🍎", "🍐", "🍊", "🍋", "🍌", "🍉", "🍇", "🍓", "🫐", "🍈",
+    "🍒", "🍑", "🥭", "🍍", "🥥", "🥝", "🍅", "🍆", "🥑", "🥦",
+    "🥬", "🥒", "🌶️", "🫑", "🌽", "🥕", "🫒", "🧄", "🧅", "🥔",
+    "🍠", "🥐", "🥯", "🍞", "🥖", "🥨", "🧀", "🥚", "🍳", "🧈",
+    "🥞", "🧇", "🥓", "🥩", "🍗", "🍖", "🦴", "🌭", "🍔", "🍟",
+    "🍕", "🫓", "🥪", "🥙", "🧆", "🌮", "🌯", "🫔", "🥗", "🥘",
+    "🫕", "🥫", "🍝", "🍜", "🍲", "🍛", "🍣", "🍱", "🥟", "🍤",
+    "🍙", "🍚", "🍘", "🍥", "🥠", "🥮", "🍡", "🍧", "🍨", "🍦",
+    "🍰", "🎂", "🧁", "🍫", "🍬", "🍭", "🍮", "🍯", "🍼", "🥛"
+]
 
 # -------------------------------
 # 問題生成関数（変更なし）
@@ -234,13 +289,26 @@ def generate_worksheet():
     return questions, answers
 
 # -------------------------------
+# セッション状態の初期化
+if "questions" not in st.session_state:
+    st.session_state["questions"] = []
+    st.session_state["answers"] = []
+    st.session_state["current_q"] = 0
+    st.session_state["score"] = 0
+    st.session_state["answered"] = [False] * 30
+    st.session_state["puzzle_pieces"] = []   # 各ピースの絵文字（問題数分）
+    st.session_state["puzzle_filled"] = []   # 各ピースが埋まったかどうか
+
+# -------------------------------
 # メイン処理
 if "questions" not in st.session_state:
     st.session_state["questions"] = []
     st.session_state["answers"] = []
-    st.session_state["current_q"] = 0  # チャレンジモード用
+    st.session_state["current_q"] = 0
     st.session_state["score"] = 0
-    st.session_state["answered"] = [False] * 30  # 回答済みフラグ
+    st.session_state["answered"] = [False] * 30
+    st.session_state["puzzle_pieces"] = []
+    st.session_state["puzzle_filled"] = []
 
 # 新規作成ボタン
 col1, col2, col3 = st.columns([1, 2, 1])
@@ -253,6 +321,15 @@ with col2:
             st.session_state["current_q"] = 0
             st.session_state["score"] = 0
             st.session_state["answered"] = [False] * len(q_list)
+            
+            # パズル用のデータを初期化
+            n = len(q_list)
+            # 問題数分の異なる絵文字をランダムに選ぶ（重複なし）
+            available_emojis = EMOJI_LIST.copy()
+            random.shuffle(available_emojis)
+            st.session_state["puzzle_pieces"] = available_emojis[:n]
+            st.session_state["puzzle_filled"] = [False] * n
+            
             if "チャレンジ" in mode:
                 st.rerun()
 
@@ -284,7 +361,7 @@ if "れんしゅう" in mode:
         st.info("👈 もんだいをつくってね")
 
 else:
-    # ---------- チャレンジモード（1問ずつ回答）----------
+    # ---------- チャレンジモード（1問ずつ回答＋パズル）----------
     if not st.session_state["questions"]:
         st.info("🎲 もんだいをつくってはじめよう！")
     else:
@@ -292,18 +369,58 @@ else:
         a_list = st.session_state["answers"]
         total = len(q_list)
         current = st.session_state["current_q"]
+        filled = st.session_state["puzzle_filled"]
+        pieces = st.session_state["puzzle_pieces"]
         
         # 進捗表示
-        st.progress((current) / total, text=f"もんだい {current+1} / {total}")
+        st.progress(current / total, text=f"もんだい {current+1} / {total}")
         st.markdown(f"### せいかいすう: {st.session_state['score']} / {total}")
         
+        # -------------------------------
+        # パズル表示（問題数に合わせてグリッドサイズを計算）
+        if total > 0:
+            # グリッドの列数を決める（できるだけ正方形に近く）
+            cols = math.ceil(math.sqrt(total))
+            rows = math.ceil(total / cols)
+            
+            st.markdown("### 🧩 あつめてね！パズル")
+            with st.container():
+                st.markdown('<div class="puzzle-container">', unsafe_allow_html=True)
+                
+                # CSSでグリッドを定義
+                grid_style = f"""
+                <style>
+                .puzzle-grid-{total} {{
+                    display: grid;
+                    grid-template-columns: repeat({cols}, 1fr);
+                    gap: 10px;
+                    justify-content: center;
+                }}
+                </style>
+                """
+                st.markdown(grid_style, unsafe_allow_html=True)
+                
+                # グリッドを描画
+                html = f'<div class="puzzle-grid puzzle-grid-{total}">'
+                for i in range(total):
+                    cell_class = "puzzle-cell filled" if filled[i] else "puzzle-cell"
+                    content = pieces[i] if filled[i] else "❓"
+                    html += f'<div class="{cell_class}">{content}</div>'
+                # 余ったセルは空白で埋める（グリッドを整えるため）
+                for i in range(total, rows * cols):
+                    html += f'<div class="puzzle-cell" style="visibility: hidden;"></div>'
+                html += '</div>'
+                st.markdown(html, unsafe_allow_html=True)
+                
+                st.markdown('</div>', unsafe_allow_html=True)
+        
+        # -------------------------------
+        # 現在の問題
         if current < total:
-            # 現在の問題を表示
             st.markdown(f'<div class="question-box">🔢 {q_list[current]}</div>', unsafe_allow_html=True)
             
-            # 回答入力（問題タイプによって入力欄を変える）
+            # 回答入力
             if "□" in q_list[current] and "記号" in q_list[current]:
-                # 比較問題（＞＜＝）
                 user_answer = st.radio(
                     "ふごうをえらんでね",
                     options=[">", "<", "="],
@@ -311,7 +428,6 @@ else:
                     key=f"q_{current}"
                 )
             else:
-                # 数値回答
                 user_answer = st.text_input("こたえをにゅうりょくしてね", key=f"q_{current}", value="")
             
             col1, col2 = st.columns(2)
@@ -323,22 +439,33 @@ else:
                         if "記号" in q_list[current]:
                             is_correct = (user_answer == a_list[current])
                         else:
-                            # 数値比較（スペースや改行を除去）
                             user_clean = user_answer.strip().replace(" ", "")
                             correct_clean = a_list[current].strip().replace(" ", "")
                             is_correct = (user_clean == correct_clean)
                         
                         if is_correct:
+                            # 正解処理
                             st.session_state["score"] += 1
+                            st.session_state["puzzle_filled"][current] = True  # 現在の問題のピースを埋める
                             st.markdown('<div class="correct-msg">🎉 せいかい！ すごい！</div>', unsafe_allow_html=True)
+                            
+                            # 全問正解チェック
+                            if all(st.session_state["puzzle_filled"]):
+                                st.balloons()
+                                st.markdown('<div class="correct-msg" style="font-size:2rem;">🌈✨ パズルかんせい！ やったね！ ✨🌈</div>', unsafe_allow_html=True)
+                            
+                            # 次の問題へ
+                            if current + 1 < total:
+                                st.session_state["current_q"] += 1
+                                st.rerun()
                         else:
                             st.markdown(f'<div class="wrong-msg">😢 ざんねん... ただしいこたえは {a_list[current]}</div>', unsafe_allow_html=True)
-                        
-                        st.session_state["answered"][current] = True
-                        # 次の問題へ（最終問以外）
-                        if current + 1 < total:
-                            st.session_state["current_q"] += 1
-                            st.rerun()
+                            
+                            # 間違えても次の問題に進める（再挑戦できるように）
+                            # 必要ならここで再試行させてもよいが、今回は進むだけにする
+                            # if current + 1 < total:
+                            #     st.session_state["current_q"] += 1
+                            #     st.rerun()
                     else:
                         st.warning("こたえをにゅうりょくしてね")
             
@@ -350,11 +477,15 @@ else:
         else:
             # 全問終了
             st.balloons()
-            st.markdown(f"## 🎊 おわり！ せいかいすう: {st.session_state['score']} / {total}")
+            if all(st.session_state["puzzle_filled"]):
+                st.markdown("## 🎊 おめでとう！ ぜんもんせいかい！")
+            else:
+                st.markdown(f"## 🎊 おわり！ せいかいすう: {st.session_state['score']} / {total}")
             if st.button("🔄 もういちど"):
                 st.session_state["current_q"] = 0
                 st.session_state["score"] = 0
                 st.session_state["answered"] = [False] * total
+                st.session_state["puzzle_filled"] = [False] * total
                 st.rerun()
 
 # -------------------------------
