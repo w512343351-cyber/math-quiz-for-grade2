@@ -4,7 +4,7 @@ import random
 from datetime import datetime
 
 # -------------------------------
-# ページ設定（かわいいアイコンとタイトル）
+# ページ設定
 st.set_page_config(
     page_title="わくわく算数ランド", 
     page_icon="🧸", 
@@ -12,15 +12,13 @@ st.set_page_config(
 )
 
 # -------------------------------
-# カスタムCSSでフォントや色を一気にポップに！
+# カスタムCSS（かわいく）
 st.markdown("""
 <style>
-    /* 全体のフォントを丸くてかわいく */
     @import url('https://fonts.googleapis.com/css2?family=Comic+Neue:wght@400;700&display=swap');
     html, body, [class*="css"]  {
         font-family: 'Comic Neue', cursive;
     }
-    /* タイトルを虹色に */
     .rainbow-title {
         font-size: 3.5rem;
         font-weight: bold;
@@ -30,18 +28,12 @@ st.markdown("""
         text-align: center;
         margin-bottom: 0;
     }
-    /* サブタイトル */
     .sub-title {
         font-size: 1.5rem;
         color: #ff9f43;
         text-align: center;
         margin-top: 0;
     }
-    /* サイドバーを明るく */
-    .css-1d391kg {
-        background-color: #fff9e6;
-    }
-    /* ボタンをポップに */
     .stButton > button {
         background-color: #ff9ff3;
         color: white;
@@ -57,26 +49,32 @@ st.markdown("""
         transform: translateY(3px);
         box-shadow: 0 2px 0 #b13a9b;
     }
-    /* 問題カード */
-    .question-card {
+    .question-box {
         background-color: #fff3e6;
         border-radius: 20px;
-        padding: 1rem;
-        margin: 0.5rem 0;
-        border-left: 10px solid #ff9ff3;
-        font-size: 1.3rem;
+        padding: 2rem;
+        margin: 1rem 0;
+        border-left: 15px solid #ff9ff3;
+        font-size: 2rem;
+        text-align: center;
         box-shadow: 0 4px 8px rgba(0,0,0,0.1);
     }
-    /* 答えカード */
-    .answer-card {
-        background-color: #e3f0ff;
-        border-radius: 20px;
-        padding: 1rem;
-        margin: 0.5rem 0;
-        border-left: 10px solid #48dbfb;
-        font-size: 1.3rem;
+    .correct-msg {
+        background-color: #d4edda;
+        color: #155724;
+        border-radius: 10px;
+        padding: 0.5rem;
+        text-align: center;
+        font-size: 1.5rem;
     }
-    /* フッター */
+    .wrong-msg {
+        background-color: #f8d7da;
+        color: #721c24;
+        border-radius: 10px;
+        padding: 0.5rem;
+        text-align: center;
+        font-size: 1.5rem;
+    }
     .footer {
         text-align: center;
         color: #aaa;
@@ -87,28 +85,30 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # -------------------------------
-# ヘッダー部分（かわいい絵文字いっぱい）
+# タイトル
 st.markdown('<p class="rainbow-title">🧸 わくわく算数ランド 🎈</p>', unsafe_allow_html=True)
-st.markdown('<p class="sub-title">✨ あそびながらさんすうにちょうせん！ ✨</p>', unsafe_allow_html=True)
+st.markdown('<p class="sub-title">✨ えらんで といて まるつけ！ ✨</p>', unsafe_allow_html=True)
 st.markdown("---")
 
 # -------------------------------
-# サイドバー（カラフルな設定パネル）
+# サイドバー（設定）
 with st.sidebar:
     st.markdown("## 🎮 ゲームせってい")
     st.markdown("---")
     
-    # 問題数（スライダーを星で飾る）
-    num_questions = st.slider(
-        "⭐ もんだいすう", 
-        min_value=1, max_value=30, value=10,
-        help="いくつもんだいをとくかえらんでね"
+    # モード選択
+    mode = st.radio(
+        "あそびかたをえらんでね",
+        options=["📋 れんしゅうモード（いちらんひょうじ）", "🎯 チャレンジモード（1もんずつこたえる）"],
+        index=0
     )
+    
+    st.markdown("---")
+    num_questions = st.slider("⭐ もんだいすう", min_value=1, max_value=30, value=10)
     
     st.markdown("---")
     st.markdown("### 🧮 どんなけいさん？")
     
-    # カラフルなチェックボックス
     col1, col2 = st.columns(2)
     with col1:
         calc_addition = st.checkbox("➕ たしざん", value=True)
@@ -121,15 +121,12 @@ with st.sidebar:
     
     st.markdown("---")
     st.markdown("### 🎯 むずかしさ")
-    
-    # 難易度を動物で表現
     difficulty = st.radio(
         "レベルをえらんでね",
         options=["🐣 かんたん", "🐼 ふつう", "🦁 むずかしい"],
         index=1,
         horizontal=True
     )
-    # 選択内容をコード内で使いやすい形に変換
     if difficulty == "🐣 かんたん":
         diff_level = "1桁のみ"
     elif difficulty == "🐼 ふつう":
@@ -138,18 +135,15 @@ with st.sidebar:
         diff_level = "2桁（あり）"
     
     st.markdown("---")
-    # 答え表示スイッチ（かわいいトグル）
-    show_answers = st.toggle("✨ こたえをみる", value=True)
-    
-    st.markdown("---")
-    st.markdown("💡 **つかいかた**: ボタンをおすとしゅつだい！")
+    # 練習モード用：答え表示
+    if "れんしゅう" in mode:
+        show_answers = st.toggle("✨ こたえをみる", value=True)
 
 # -------------------------------
-# 問題生成関数（前回と同じ内容）
+# 問題生成関数（変更なし）
 def generate_question(types, difficulty):
     q_type = random.choice(types)
     
-    # 足し算
     if q_type == "addition":
         if difficulty == "1桁のみ":
             a = random.randint(1, 9)
@@ -165,7 +159,6 @@ def generate_question(types, difficulty):
             b = random.randint(10, 99)
         return f"{a} + {b} = ?", str(a + b)
     
-    # 引き算
     elif q_type == "subtraction":
         if difficulty == "1桁のみ":
             a = random.randint(1, 9)
@@ -180,13 +173,11 @@ def generate_question(types, difficulty):
             b = random.randint(1, a)
         return f"{a} - {b} = ?", str(a - b)
     
-    # 掛け算
     elif q_type == "multiplication":
         a = random.randint(1, 9)
         b = random.randint(1, 9)
         return f"{a} × {b} = ?", str(a * b)
     
-    # 比較
     elif q_type == "compare":
         a = random.randint(1, 100)
         b = random.randint(1, 100)
@@ -203,7 +194,6 @@ def generate_question(types, difficulty):
             b = a
         return f"{a} □ {b} （にあてはまる記号 >, <, = を答えましょう）", op
     
-    # 長さ
     elif q_type == "length":
         if random.choice([True, False]):
             meters = random.randint(1, 5)
@@ -212,14 +202,11 @@ def generate_question(types, difficulty):
             cm = random.choice([100, 200, 300, 400, 500, 600, 700, 800, 900])
             return f"{cm} cm = □ m", str(cm // 100) if cm % 100 == 0 else f"{cm/100:.1f}"
     
-    # 時間
     elif q_type == "time":
         hour = random.randint(1, 12)
         minute = random.choice([0, 15, 30, 45])
         return f"時計の針が {hour} 時 {minute} 分をさしています。時刻は？", f"{hour}時{minute}分"
 
-# -------------------------------
-# 問題リスト生成
 def generate_worksheet():
     selected_types = []
     if calc_addition:
@@ -247,38 +234,44 @@ def generate_worksheet():
     return questions, answers
 
 # -------------------------------
-# メインエリア：生成ボタン（どーんと大きく）
+# メイン処理
+if "questions" not in st.session_state:
+    st.session_state["questions"] = []
+    st.session_state["answers"] = []
+    st.session_state["current_q"] = 0  # チャレンジモード用
+    st.session_state["score"] = 0
+    st.session_state["answered"] = [False] * 30  # 回答済みフラグ
+
+# 新規作成ボタン
 col1, col2, col3 = st.columns([1, 2, 1])
 with col2:
-    st.markdown("<br>", unsafe_allow_html=True)
-    if st.button("🎲 もんだいをつくる！ 🎲"):
-        questions, answers = generate_worksheet()
-        if questions:
-            st.session_state["questions"] = questions
-            st.session_state["answers"] = answers
-            st.balloons()  # バルーンでお祝い！
-    st.markdown("<br>", unsafe_allow_html=True)
+    if st.button("🎲 もんだいをあたらしくつくる"):
+        q_list, a_list = generate_worksheet()
+        if q_list:
+            st.session_state["questions"] = q_list
+            st.session_state["answers"] = a_list
+            st.session_state["current_q"] = 0
+            st.session_state["score"] = 0
+            st.session_state["answered"] = [False] * len(q_list)
+            if "チャレンジ" in mode:
+                st.rerun()
 
 # -------------------------------
-# 問題表示エリア
-if "questions" in st.session_state and st.session_state["questions"]:
-    st.markdown("---")
-    st.markdown("## 📚 きょうのもんだい")
-    
-    # 問題をカード形式で表示
-    for i, q in enumerate(st.session_state["questions"], 1):
-        st.markdown(f'<div class="question-card">🔹 {i}. {q}</div>', unsafe_allow_html=True)
-    
-    # 答え表示
-    if show_answers:
-        st.markdown("## 🔍 こたえあわせ")
-        for i, a in enumerate(st.session_state["answers"], 1):
-            st.markdown(f'<div class="answer-card">✅ {i}. {a}</div>', unsafe_allow_html=True)
-    
-    # ダウンロードボタン（かわいく）
-    col1, col2, col3 = st.columns([1, 2, 1])
-    with col2:
-        text_content = "【わくわく算数ランド】\n\n"
+# モード分岐
+if "れんしゅう" in mode:
+    # ---------- 練習モード（一覧表示）----------
+    if st.session_state["questions"]:
+        st.markdown("## 📚 きょうのもんだい")
+        for i, q in enumerate(st.session_state["questions"], 1):
+            st.markdown(f"**{i}.** {q}")
+        
+        if show_answers:
+            st.markdown("## 🔍 こたえ")
+            for i, a in enumerate(st.session_state["answers"], 1):
+                st.markdown(f"**{i}.** {a}")
+        
+        # ダウンロード
+        text_content = "【れんしゅうもんだい】\n\n"
         for i, q in enumerate(st.session_state["questions"], 1):
             text_content += f"{i}. {q}\n"
         if show_answers:
@@ -286,38 +279,84 @@ if "questions" in st.session_state and st.session_state["questions"]:
             for i, a in enumerate(st.session_state["answers"], 1):
                 text_content += f"{i}. {a}\n"
         
-        st.download_button(
-            label="📥 プリントにほぞん",
-            data=text_content,
-            file_name=f"wakuwaku_math_{datetime.now().strftime('%Y%m%d')}.txt",
-            mime="text/plain"
-        )
+        st.download_button("📥 プリントにほぞん", text_content, file_name="renshu.txt")
+    else:
+        st.info("👈 もんだいをつくってね")
+
 else:
-    # 初期表示（かわいいイラスト風）
-    st.markdown("## 🎈 はじめよう！")
-    col1, col2, col3 = st.columns([1, 3, 1])
-    with col2:
-        st.markdown("""
-        ### ようこそ！
+    # ---------- チャレンジモード（1問ずつ回答）----------
+    if not st.session_state["questions"]:
+        st.info("🎲 もんだいをつくってはじめよう！")
+    else:
+        q_list = st.session_state["questions"]
+        a_list = st.session_state["answers"]
+        total = len(q_list)
+        current = st.session_state["current_q"]
         
-        🌟 **わくわく算数ランド**へようこそ！  
-        おんなじ　ほうほうで　さんすうの　れんしゅうが　できるよ。
+        # 進捗表示
+        st.progress((current) / total, text=f"もんだい {current+1} / {total}")
+        st.markdown(f"### せいかいすう: {st.session_state['score']} / {total}")
         
-        1. 👈 ひだりの　サイドバーで　もんだいの　しゅるいを　えらんでね
-        2. 🎲 「もんだいをつくる！」ボタンを　ぽちっ！
-        3. 📝 もんだいを　といて　こたえあわせ
-        
-        さあ、たのしく　べんきょうしよう！
-        """)
-        st.markdown("---")
-        st.markdown("🎉 **それでは、レッツ　チャレンジ！**")
+        if current < total:
+            # 現在の問題を表示
+            st.markdown(f'<div class="question-box">🔢 {q_list[current]}</div>', unsafe_allow_html=True)
+            
+            # 回答入力（問題タイプによって入力欄を変える）
+            if "□" in q_list[current] and "記号" in q_list[current]:
+                # 比較問題（＞＜＝）
+                user_answer = st.radio(
+                    "ふごうをえらんでね",
+                    options=[">", "<", "="],
+                    horizontal=True,
+                    key=f"q_{current}"
+                )
+            else:
+                # 数値回答
+                user_answer = st.text_input("こたえをにゅうりょくしてね", key=f"q_{current}", value="")
+            
+            col1, col2 = st.columns(2)
+            with col1:
+                if st.button("✅ こたえる", key=f"btn_{current}"):
+                    if user_answer:
+                        # 正誤判定
+                        is_correct = False
+                        if "記号" in q_list[current]:
+                            is_correct = (user_answer == a_list[current])
+                        else:
+                            # 数値比較（スペースや改行を除去）
+                            user_clean = user_answer.strip().replace(" ", "")
+                            correct_clean = a_list[current].strip().replace(" ", "")
+                            is_correct = (user_clean == correct_clean)
+                        
+                        if is_correct:
+                            st.session_state["score"] += 1
+                            st.markdown('<div class="correct-msg">🎉 せいかい！ すごい！</div>', unsafe_allow_html=True)
+                        else:
+                            st.markdown(f'<div class="wrong-msg">😢 ざんねん... ただしいこたえは {a_list[current]}</div>', unsafe_allow_html=True)
+                        
+                        st.session_state["answered"][current] = True
+                        # 次の問題へ（最終問以外）
+                        if current + 1 < total:
+                            st.session_state["current_q"] += 1
+                            st.rerun()
+                    else:
+                        st.warning("こたえをにゅうりょくしてね")
+            
+            with col2:
+                if st.button("⏩ とばす"):
+                    if current + 1 < total:
+                        st.session_state["current_q"] += 1
+                        st.rerun()
+        else:
+            # 全問終了
+            st.balloons()
+            st.markdown(f"## 🎊 おわり！ せいかいすう: {st.session_state['score']} / {total}")
+            if st.button("🔄 もういちど"):
+                st.session_state["current_q"] = 0
+                st.session_state["score"] = 0
+                st.session_state["answered"] = [False] * total
+                st.rerun()
 
 # -------------------------------
-# フッター
 st.markdown("---")
-st.markdown("""
-<div class="footer">
-    🧸 わくわく算数ランド | まいにちあそんでさんすうマスター！<br>
-    © 2025 げんきっず
-</div>
-""", unsafe_allow_html=True)
+st.markdown('<div class="footer">🧸 わくわく算数ランド | たのしくまなぼう！</div>', unsafe_allow_html=True)
