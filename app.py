@@ -2,7 +2,7 @@
 import streamlit as st
 import random
 import math
-from datetime import datetime, date, timedelta
+from datetime import datetime
 
 # -------------------------------
 # ページ設定
@@ -132,15 +132,7 @@ st.markdown("""
         50% { transform: scale(1.2); }
         100% { transform: scale(1); }
     }
-    .streak-badge {
-        background: linear-gradient(45deg, #ff4500, #ff8c00);
-        color: white;
-        padding: 10px 20px;
-        border-radius: 30px;
-        font-size: 1.5rem;
-        text-align: center;
-        display: inline-block;
-    }
+    /* 問題表示 */
     .question-box {
         background-color: #fff3e6;
         border-radius: 20px;
@@ -199,6 +191,7 @@ st.markdown("""
         background-color: #fff3e6;
         transform: scale(1.05);
     }
+    /* ご褒美シール */
     @keyframes shine {
         0% { box-shadow: 0 0 20px gold; }
         50% { box-shadow: 0 0 40px orange; }
@@ -333,11 +326,17 @@ EMOJI_LIST = [
     "🕊️", "🐇", "🦝", "🦔", "🦦", "🦥", "🐁", "🐀", "🐿️", "🦔",
     "🍎", "🍐", "🍊", "🍋", "🍌", "🍉", "🍇", "🍓", "🫐", "🍈",
     "🍒", "🍑", "🥭", "🍍", "🥥", "🥝", "🍅", "🍆", "🥑", "🥦",
-    "🥬", "🥒", "🌶️", "🫑", "🌽", "🥕", "🫒", "🧄", "🧅", "🥔"
+    "🥬", "🥒", "🌶️", "🫑", "🌽", "🥕", "🫒", "🧄", "🧅", "🥔",
+    "🍠", "🥐", "🥯", "🍞", "🥖", "🥨", "🧀", "🥚", "🍳", "🧈",
+    "🥞", "🧇", "🥓", "🥩", "🍗", "🍖", "🦴", "🌭", "🍔", "🍟",
+    "🍕", "🫓", "🥪", "🥙", "🧆", "🌮", "🌯", "🫔", "🥗", "🥘",
+    "🫕", "🥫", "🍝", "🍜", "🍲", "🍛", "🍣", "🍱", "🥟", "🍤",
+    "🍙", "🍚", "🍘", "🍥", "🥠", "🥮", "🍡", "🍧", "🍨", "🍦",
+    "🍰", "🎂", "🧁", "🍫", "🍬", "🍭", "🍮", "🍯", "🍼", "🥛"
 ]
 
 # -------------------------------
-# 問題生成関数（変更なし）
+# 問題生成関数
 def generate_question(types, difficulty):
     q_type = random.choice(types)
     
@@ -446,38 +445,10 @@ if "questions" not in st.session_state:
     st.session_state["exp"] = 0
     st.session_state["prev_character"] = "たまご"
     
-    # スタンプカード用
-    st.session_state["stamps"] = [False] * 30  # 30日分のスタンプ
-    st.session_state["last_stamp_date"] = None
-    st.session_state["streak"] = 0
+    # スタンプカード用（全問正解で増える方式）
+    st.session_state["stamps"] = [False] * 30      # 各スタンプの有無
+    st.session_state["total_stamps"] = 0           # 累計獲得スタンプ数
 
-# -------------------------------
-# スタンプカードの更新（ログイン時）
-today = date.today().isoformat()
-if st.session_state["last_stamp_date"] != today:
-    # 連続記録のチェック
-    yesterday = (date.today() - timedelta(days=1)).isoformat()
-    if st.session_state["last_stamp_date"] == yesterday:
-        st.session_state["streak"] += 1
-    else:
-        st.session_state["streak"] = 1
-    
-    # 基準日を設定（この日を0日目とする）
-    base_date = date(2025, 1, 1)
-    today_date = date.today()
-    days_since_base = (today_date - base_date).days  # 基準日からの経過日数
-    
-    # スタンプインデックス（0〜29）を計算
-    stamp_index = days_since_base % 30
-    
-    # スタンプを押す（まだ押されていなければ）
-    if not st.session_state["stamps"][stamp_index]:
-        st.session_state["stamps"][stamp_index] = True
-        # オプション：スタンプが押されたときに小さな演出
-        # st.balloons()
-    
-    # 最終訪問日を更新
-    st.session_state["last_stamp_date"] = today
 # -------------------------------
 # キャラクター情報の表示
 current_char, char_info = get_character_by_exp(st.session_state["exp"])
@@ -505,15 +476,15 @@ with st.container():
 # -------------------------------
 # スタンプカード表示
 st.markdown('<div class="stamp-container">', unsafe_allow_html=True)
-st.markdown(f"### 📅 まいにちスタンプ  🔥 {st.session_state['streak']}にちれんぞく")
+st.markdown(f"### 🎯 ぜんもんせいかいスタンプ  🔥 げんざい {st.session_state['total_stamps']}こ")
 
 # スタンプグリッドの表示
 cols_per_row = 7
-for i in range(0, len(st.session_state["stamps"]), cols_per_row):
+for i in range(0, 30, cols_per_row):
     cols = st.columns(cols_per_row)
     for j in range(cols_per_row):
         idx = i + j
-        if idx < len(st.session_state["stamps"]):
+        if idx < 30:
             stamp_class = "stamp-cell filled" if st.session_state["stamps"][idx] else "stamp-cell"
             stamp_content = "🌸" if st.session_state["stamps"][idx] else "❓"
             cols[j].markdown(f'<div class="{stamp_class}">{stamp_content}</div>', unsafe_allow_html=True)
@@ -662,6 +633,34 @@ else:
                             if all(st.session_state["puzzle_filled"]):
                                 st.session_state["all_correct"] = True
                                 st.balloons()
+                                
+                                # ★★★ スタンプを1つ増やす ★★★
+                                # 次に埋まっていないスタンプを探す
+                                next_stamp = None
+                                for i in range(30):
+                                    if not st.session_state["stamps"][i]:
+                                        next_stamp = i
+                                        break
+                                if next_stamp is not None:
+                                    st.session_state["stamps"][next_stamp] = True
+                                else:
+                                    # 30個すべて埋まっていたらリセット（新しい周期）
+                                    st.session_state["stamps"] = [False] * 30
+                                    st.session_state["stamps"][0] = True  # 新しい周期の最初のスタンプ
+                                
+                                st.session_state["total_stamps"] += 1
+                                
+                                # ご褒美（10の倍数）
+                                if st.session_state["total_stamps"] % 10 == 0:
+                                    st.balloons()
+                                    st.markdown("""
+                                    <div class="sticker" style="width:150px; height:150px; animation: shine 1s infinite;">
+                                        <div style="font-size:3rem;">🎁</div>
+                                        <div class="sticker-text" style="font-size:1.5rem;">10スタンプ達成！</div>
+                                    </div>
+                                    """, unsafe_allow_html=True)
+                                    st.success("🎉 10スタンプたまったよ！ すごい！")
+                                
                                 st.markdown(f'<div class="correct-msg" style="font-size:2rem;">🌈✨ パズルかんせい！ ✨🌈</div>', unsafe_allow_html=True)
                                 st.session_state["current_q"] = total
                                 st.rerun()
