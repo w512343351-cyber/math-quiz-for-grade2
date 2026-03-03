@@ -184,53 +184,50 @@ st.markdown("""
         color: white;
         text-shadow: 2px 2px 0 #b37400;
     }
-    /* ★★★ 右下固定の庭（重複なし）★★★ */
-    .garden-fixed {
-        position: fixed;
-        bottom: 20px;
-        right: 20px;
-        width: 200px;
-        background: rgba(255, 255, 255, 0.95);
-        border-radius: 20px;
-        padding: 15px;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-        border: 3px solid #90be6d;
-        z-index: 1000;
-        backdrop-filter: blur(5px);
-    }
-    .garden-title {
-        font-size: 1rem;
-        color: #2d6a4f;
-        font-weight: bold;
-        text-align: center;
-        margin-bottom: 8px;
-    }
-    .garden-grid {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 8px;
-    }
-    .garden-item {
-        background-color: #fff9e6;
-        border-radius: 50%;
-        padding: 5px;
-        text-align: center;
-        border: 2px solid #90be6d;
-        aspect-ratio: 1/1;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-    }
-    .garden-emoji {
-        font-size: 1.8rem;
-    }
-    .footer {
-        text-align: center;
-        color: #aaa;
-        font-size: 0.8rem;
-        margin-top: 3rem;
-    }
+/* ★★★ 右下固定の庭（コンパクト＆一体化）★★★ */
+.garden-fixed {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 180px;
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 20px;
+    padding: 12px 10px 10px 10px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    border: 3px solid #90be6d;
+    z-index: 1000;
+    backdrop-filter: blur(5px);
+}
+.garden-title {
+    font-size: 0.9rem;
+    color: #2d6a4f;
+    font-weight: bold;
+    text-align: center;
+    margin-bottom: 8px;
+    background: rgba(255, 255, 255, 0.7);
+    padding: 3px 0;
+    border-radius: 20px;
+}
+.garden-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 5px;
+}
+.garden-item {
+    background-color: #fff9e6;
+    border-radius: 50%;
+    padding: 3px;
+    text-align: center;
+    border: 2px solid #90be6d;
+    aspect-ratio: 1/1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+.garden-emoji {
+    font-size: 1.2rem;
+}
 </style>
 """, unsafe_allow_html=True)
 
