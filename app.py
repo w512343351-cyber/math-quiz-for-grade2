@@ -13,7 +13,7 @@ st.set_page_config(
 )
 
 # -------------------------------
-# カスタムCSS（かわいく）
+# カスタムCSS（かわいく＋右下固定表示）
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Comic+Neue:wght@400;700&display=swap');
@@ -50,7 +50,7 @@ st.markdown("""
         transform: translateY(3px);
         box-shadow: 0 2px 0 #b13a9b;
     }
-    /* キャラクター表示 */
+    /* メインのキャラクター表示 */
     .character-container {
         background: linear-gradient(135deg, #fff3e6, #ffe6f0);
         border-radius: 30px;
@@ -99,38 +99,6 @@ st.markdown("""
         display: inline-block;
         font-size: 1.2rem;
         margin: 10px 0;
-    }
-    /* スタンプカード */
-    .stamp-container {
-        background-color: #fff9e6;
-        border-radius: 30px;
-        padding: 20px;
-        margin: 20px 0;
-        border: 5px solid #ffd700;
-    }
-    .stamp-grid {
-        display: grid;
-        grid-template-columns: repeat(7, 1fr);
-        gap: 10px;
-        margin: 20px 0;
-    }
-    .stamp-cell {
-        background-color: #f0f0f0;
-        border-radius: 15px;
-        padding: 15px;
-        text-align: center;
-        font-size: 2rem;
-        border: 2px dashed #aaa;
-    }
-    .stamp-cell.filled {
-        background-color: #fff3e6;
-        border: 3px solid #ffd700;
-        animation: pop 0.3s;
-    }
-    @keyframes pop {
-        0% { transform: scale(1); }
-        50% { transform: scale(1.2); }
-        100% { transform: scale(1); }
     }
     /* 問題表示 */
     .question-box {
@@ -216,6 +184,56 @@ st.markdown("""
         color: white;
         text-shadow: 2px 2px 0 #b37400;
     }
+    /* ★★★ 右下固定のキャラクター図鑑 ★★★ */
+    .garden-fixed {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        width: 250px;
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 20px;
+        padding: 15px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        border: 3px solid #ffb6c1;
+        z-index: 1000;
+        backdrop-filter: blur(5px);
+    }
+    .garden-title {
+        font-size: 1.2rem;
+        color: #ff69b4;
+        font-weight: bold;
+        text-align: center;
+        margin-bottom: 10px;
+    }
+    .garden-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 8px;
+    }
+    .garden-item {
+        background-color: #f9f9f9;
+        border-radius: 15px;
+        padding: 10px;
+        text-align: center;
+        border: 2px solid #ffd700;
+        transition: 0.2s;
+    }
+    .garden-item:hover {
+        transform: scale(1.05);
+        background-color: #fff3e6;
+    }
+    .garden-emoji {
+        font-size: 2rem;
+    }
+    .garden-name {
+        font-size: 0.8rem;
+        color: #555;
+    }
+    .garden-count {
+        font-size: 0.7rem;
+        color: #ff69b4;
+        font-weight: bold;
+    }
     .footer {
         text-align: center;
         color: #aaa;
@@ -228,7 +246,7 @@ st.markdown("""
 # -------------------------------
 # タイトル
 st.markdown('<p class="rainbow-title">🧸 わくわく算数ランド 🎈</p>', unsafe_allow_html=True)
-st.markdown('<p class="sub-title">✨ スタンプをためて キャラクターをそだてよう！ ✨</p>', unsafe_allow_html=True)
+st.markdown('<p class="sub-title">✨ キャラクターをそだてながら さんすうれんしゅう！ ✨</p>', unsafe_allow_html=True)
 st.markdown("---")
 
 # -------------------------------
@@ -430,7 +448,7 @@ def generate_worksheet():
     return questions, answers
 
 # -------------------------------
-# セッション状態の初期化
+# セッション状態の初期化（キャラクター図鑑用追加）
 if "questions" not in st.session_state:
     st.session_state["questions"] = []
     st.session_state["answers"] = []
@@ -445,22 +463,32 @@ if "questions" not in st.session_state:
     st.session_state["exp"] = 0
     st.session_state["prev_character"] = "たまご"
     
-    # スタンプカード用（全問正解で増える方式）
-    st.session_state["stamps"] = [False] * 30      # 各スタンプの有無
-    st.session_state["total_stamps"] = 0           # 累計獲得スタンプ数
+    # ★★★ キャラクター図鑑（庭）用 ★★★
+    st.session_state["character_collection"] = {
+        "たまご": 0,
+        "ひよこ": 0,
+        "にわとり": 0,
+        "おおきなにわとり": 0,
+        "フェニックス": 0
+    }
+    st.session_state["total_hatched"] = 0  # 累計孵化数
 
 # -------------------------------
-# キャラクター情報の表示
+# 現在のキャラクターを取得
 current_char, char_info = get_character_by_exp(st.session_state["exp"])
 next_level_exp = get_next_level_exp(st.session_state["exp"])
 exp_percentage = min(100, (st.session_state["exp"] / next_level_exp) * 100)
 
-# レベルアップチェック
+# レベルアップチェック＆図鑑登録
 if current_char != st.session_state["prev_character"]:
     st.balloons()
+    # 新しいキャラクターを図鑑に追加
+    st.session_state["character_collection"][current_char] += 1
+    st.session_state["total_hatched"] += 1
     st.session_state["prev_character"] = current_char
 
-# キャラクター表示
+# -------------------------------
+# メインのキャラクター表示
 with st.container():
     st.markdown('<div class="character-container">', unsafe_allow_html=True)
     col1, col2 = st.columns([1, 2])
@@ -472,23 +500,6 @@ with st.container():
         st.markdown(f'<div class="level-badge">レベル {st.session_state["exp"]} / {next_level_exp}</div>', unsafe_allow_html=True)
         st.markdown(f'<div class="exp-bar"><div class="exp-fill" style="width: {exp_percentage}%;"></div></div>', unsafe_allow_html=True)
     st.markdown('</div>', unsafe_allow_html=True)
-
-# -------------------------------
-# スタンプカード表示
-st.markdown('<div class="stamp-container">', unsafe_allow_html=True)
-st.markdown(f"### 🎯 ぜんもんせいかいスタンプ  🔥 げんざい {st.session_state['total_stamps']}こ")
-
-# スタンプグリッドの表示
-cols_per_row = 7
-for i in range(0, 30, cols_per_row):
-    cols = st.columns(cols_per_row)
-    for j in range(cols_per_row):
-        idx = i + j
-        if idx < 30:
-            stamp_class = "stamp-cell filled" if st.session_state["stamps"][idx] else "stamp-cell"
-            stamp_content = "🌸" if st.session_state["stamps"][idx] else "❓"
-            cols[j].markdown(f'<div class="{stamp_class}">{stamp_content}</div>', unsafe_allow_html=True)
-st.markdown('</div>', unsafe_allow_html=True)
 
 # -------------------------------
 # 新規作成ボタン
@@ -633,34 +644,6 @@ else:
                             if all(st.session_state["puzzle_filled"]):
                                 st.session_state["all_correct"] = True
                                 st.balloons()
-                                
-                                # ★★★ スタンプを1つ増やす ★★★
-                                # 次に埋まっていないスタンプを探す
-                                next_stamp = None
-                                for i in range(30):
-                                    if not st.session_state["stamps"][i]:
-                                        next_stamp = i
-                                        break
-                                if next_stamp is not None:
-                                    st.session_state["stamps"][next_stamp] = True
-                                else:
-                                    # 30個すべて埋まっていたらリセット（新しい周期）
-                                    st.session_state["stamps"] = [False] * 30
-                                    st.session_state["stamps"][0] = True  # 新しい周期の最初のスタンプ
-                                
-                                st.session_state["total_stamps"] += 1
-                                
-                                # ご褒美（10の倍数）
-                                if st.session_state["total_stamps"] % 10 == 0:
-                                    st.balloons()
-                                    st.markdown("""
-                                    <div class="sticker" style="width:150px; height:150px; animation: shine 1s infinite;">
-                                        <div style="font-size:3rem;">🎁</div>
-                                        <div class="sticker-text" style="font-size:1.5rem;">10スタンプ達成！</div>
-                                    </div>
-                                    """, unsafe_allow_html=True)
-                                    st.success("🎉 10スタンプたまったよ！ すごい！")
-                                
                                 st.markdown(f'<div class="correct-msg" style="font-size:2rem;">🌈✨ パズルかんせい！ ✨🌈</div>', unsafe_allow_html=True)
                                 st.session_state["current_q"] = total
                                 st.rerun()
@@ -702,6 +685,47 @@ else:
                 st.session_state["all_correct"] = False
                 st.rerun()
 
+# ==============================================
+# ★★★ 右下固定のキャラクター図鑑（庭）★★★
+# ==============================================
+st.markdown("""
+<div class="garden-fixed">
+    <div class="garden-title">🌸 そだてたキャラクターたち 🌸</div>
+    <div class="garden-grid">
+""", unsafe_allow_html=True)
+
+# 図鑑の内容を動的に生成
+for char_name, char_data in CHARACTERS.items():
+    count = st.session_state["character_collection"].get(char_name, 0)
+    if count > 0:
+        st.markdown(f"""
+        <div class="garden-item">
+            <div class="garden-emoji">{char_data['emoji']}</div>
+            <div class="garden-name">{char_name}</div>
+            <div class="garden-count">×{count}</div>
+        </div>
+        """, unsafe_allow_html=True)
+
+# まだ一度も育てたことがないキャラクターは？マークで表示
+for char_name, char_data in CHARACTERS.items():
+    count = st.session_state["character_collection"].get(char_name, 0)
+    if count == 0:
+        st.markdown(f"""
+        <div class="garden-item" style="opacity: 0.5;">
+            <div class="garden-emoji">❓</div>
+            <div class="garden-name">{char_name}</div>
+            <div class="garden-count">×0</div>
+        </div>
+        """, unsafe_allow_html=True)
+
+st.markdown("""
+    </div>
+    <div style="text-align: center; margin-top: 10px; font-size: 0.9rem; color: #ff69b4;">
+        これまでにそだった数: {} こ
+    </div>
+</div>
+""".format(st.session_state["total_hatched"]), unsafe_allow_html=True)
+
 # -------------------------------
 st.markdown("---")
-st.markdown('<div class="footer">🧸 わくわく算数ランド | まいにちあそんで キャラクターをそだてよう！</div>', unsafe_allow_html=True)
+st.markdown('<div class="footer">🧸 わくわく算数ランド | キャラクターをそだてよう！</div>', unsafe_allow_html=True)
