@@ -184,50 +184,56 @@ st.markdown("""
         color: white;
         text-shadow: 2px 2px 0 #b37400;
     }
-/* ★★★ 右下固定の庭（コンパクト＆一体化）★★★ */
-.garden-fixed {
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    width: 180px;
-    background: rgba(255, 255, 255, 0.95);
-    border-radius: 20px;
-    padding: 12px 10px 10px 10px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-    border: 3px solid #90be6d;
-    z-index: 1000;
-    backdrop-filter: blur(5px);
-}
-.garden-title {
-    font-size: 0.9rem;
-    color: #2d6a4f;
-    font-weight: bold;
-    text-align: center;
-    margin-bottom: 8px;
-    background: rgba(255, 255, 255, 0.7);
-    padding: 3px 0;
-    border-radius: 20px;
-}
-.garden-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 5px;
-}
-.garden-item {
-    background-color: #fff9e6;
-    border-radius: 50%;
-    padding: 3px;
-    text-align: center;
-    border: 2px solid #90be6d;
-    aspect-ratio: 1/1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-}
-.garden-emoji {
-    font-size: 1.2rem;
-}
+    /* ★★★ 右下固定の庭（コンパクト＆完全収納）★★★ */
+    .garden-fixed {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        width: 160px;
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 18px;
+        padding: 10px 8px 8px 8px;
+        box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+        border: 3px solid #90be6d;
+        z-index: 1000;
+        backdrop-filter: blur(5px);
+    }
+    .garden-title {
+        font-size: 0.8rem;
+        color: #2d6a4f;
+        font-weight: bold;
+        text-align: center;
+        margin-bottom: 6px;
+        background: rgba(255, 255, 255, 0.8);
+        padding: 2px 0;
+        border-radius: 16px;
+    }
+    .garden-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 4px;
+    }
+    .garden-item {
+        background-color: #fff9e6;
+        border-radius: 50%;
+        padding: 2px;
+        text-align: center;
+        border: 2px solid #90be6d;
+        aspect-ratio: 1/1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    .garden-emoji {
+        font-size: 1rem;
+    }
+    .footer {
+        text-align: center;
+        color: #aaa;
+        font-size: 0.8rem;
+        margin-top: 3rem;
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -436,7 +442,7 @@ def generate_worksheet():
     return questions, answers
 
 # -------------------------------
-# セッション状態の初期化（キャラクター図鑑用追加）
+# セッション状態の初期化
 if "questions" not in st.session_state:
     st.session_state["questions"] = []
     st.session_state["answers"] = []
