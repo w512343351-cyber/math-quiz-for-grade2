@@ -367,6 +367,15 @@ st.markdown("""
         .rainbow-title { font-size: 2.5rem; }
         .question-box { font-size: 1.5rem; padding: 1rem; }
     }
+/* 水平方向の列の間隔を縮める（数字キーボードのボタン間隔を狭くする） */
+.row-widget.stHorizontal {
+    gap: 3px !important;
+}
+
+/* ボタン内の余白を調整してコンパクトに */
+.stButton > button {
+    padding: 0.3rem 0.1rem !important;
+}
 </style>
 """, unsafe_allow_html=True)
 
