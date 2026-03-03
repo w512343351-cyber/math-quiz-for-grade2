@@ -724,8 +724,35 @@ if "れんしゅう" in mode:
         st.info("👈 もんだいをつくってね")
 
 else:
-# ---------- チャレンジモード（1問ずつ回答＋パズル）----------
-if "チャレンジ" in mode:
+# ==============================================
+# モード分岐
+# ==============================================
+if "れんしゅう" in mode:
+    # ---------- 練習モード（一覧表示）----------
+    if st.session_state["questions"]:
+        st.markdown("## 📚 きょうのもんだい")
+        for i, q in enumerate(st.session_state["questions"], 1):
+            st.markdown(f"**{i}.** {q}")
+
+        if show_answers:
+            st.markdown("## 🔍 こたえ")
+            for i, a in enumerate(st.session_state["answers"], 1):
+                st.markdown(f"**{i}.** {a}")
+
+        # ダウンロード
+        text_content = "【れんしゅうもんだい】\n\n"
+        for i, q in enumerate(st.session_state["questions"], 1):
+            text_content += f"{i}. {q}\n"
+        if show_answers:
+            text_content += "\n【こたえ】\n"
+            for i, a in enumerate(st.session_state["answers"], 1):
+                text_content += f"{i}. {a}\n"
+
+        st.download_button("📥 プリントにほぞん", text_content, file_name="renshu.txt")
+    else:
+        st.info("👈 もんだいをつくってね")
+
+else:  # チャレンジモード
     if not st.session_state["questions"]:
         st.info("🎲 もんだいをつくってはじめよう！")
     else:
