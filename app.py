@@ -805,56 +805,61 @@ else:  # チャレンジモード
                             st.session_state["current_q"] += 1
                             st.rerun()
 
-            # ---------- 時間題（选项按钮 - 修复版） ----------
+            # ---------- 時間題（选项按钮 - 最终修复版） ----------
             elif qtype == "time":
                 def generate_time_options(correct):
-                    # 确保正确答案始终在选项中
+                    # 始终包含正确答案
+                    options = [correct]
                     match = re.match(r'(\d+)時(\d+)分', correct)
                     if not match:
-                        return [correct]  # fallback
+                        return options
                     hour = int(match.group(1))
                     minute = int(match.group(2))
-                    options = [correct]  # 明确包含正确答案
-                    # 生成干扰项
+
+                    # 生成干扰项池
+                    distractors = set()
                     minute_choices = [0, 15, 30, 45]
                     other_hours = [h for h in range(1, 13) if h != hour]
                     other_minutes = [m for m in minute_choices if m != minute]
-                    # 最多4个干扰项
-                    distractors = set()
-                    # 同小时不同分钟
+
+                    # 添加同小时不同分钟
                     for m in other_minutes:
                         distractors.add(f"{hour}時{m}分")
-                    # 不同小时同分钟
+                    # 添加不同小时同分钟（最多2个）
                     for h in random.sample(other_hours, min(2, len(other_hours))):
                         distractors.add(f"{h}時{minute}分")
-                    # 不同小时不同分钟
-                    if len(distractors) < 3:
+                    # 如果干扰项不足3个，再补充一些不同小时不同分钟
+                    while len(distractors) < 3:
                         h = random.choice(other_hours)
                         m = random.choice(other_minutes)
                         distractors.add(f"{h}時{m}分")
-                    # 转换为列表并随机取最多3个（加上正确答案一共4个）
+
+                    # 从干扰项池中随机选择3个（或不足则全取）
                     dist_list = list(distractors)
                     random.shuffle(dist_list)
-                    options.extend(dist_list[:3])
-                    # 确保至少有4个选项
+                    selected_distractors = dist_list[:3]
+                    options.extend(selected_distractors)
+
+                    # 如果选项少于4个，补充随机项（但通常已经足够）
                     while len(options) < 4:
                         rand_h = random.randint(1, 12)
                         rand_m = random.choice(minute_choices)
                         opt = f"{rand_h}時{rand_m}分"
                         if opt not in options:
                             options.append(opt)
+
+                    # 随机打乱顺序，确保正确答案不一定在第一位
                     random.shuffle(options)
-                    return options[:4]  # 返回4个选项
+                    return options
 
                 time_options = generate_time_options(correct_answer)
-                # 确认正确答案在选项中（调试时可取消注释下一行）
-                # st.write(f"正确答案：{correct_answer}，选项：{time_options}")
+                # 可选：调试时查看选项列表
+                # st.write("选项:", time_options)
 
                 # 将选项排成2列
-                cols_per_row = 2
-                for i in range(0, len(time_options), cols_per_row):
-                    row_cols = st.columns(cols_per_row)
-                    for j in range(cols_per_row):
+                for i in range(0, len(time_options), 2):
+                    row_cols = st.columns(2)
+                    for j in range(2):
                         idx = i + j
                         if idx < len(time_options):
                             with row_cols[j]:
