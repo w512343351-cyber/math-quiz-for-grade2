@@ -460,17 +460,18 @@ else:
                             # 正解処理
                             st.session_state["score"] += 1
                             st.session_state["puzzle_filled"][current] = True
-                            st.markdown('<div class="correct-msg">🎉 せいかい！ すごい！</div>', unsafe_allow_html=True)
                             
-                            # 全問正解チェック
+                            # 全問正解チェック（ここでチェック）
                             if all(st.session_state["puzzle_filled"]):
-                                st.balloons()
                                 st.session_state["all_correct"] = True
-                                st.markdown('<div class="correct-msg" style="font-size:2rem;">🌈✨ パズルかんせい！ やったね！ ✨🌈</div>', unsafe_allow_html=True)
-                                # 全問正解時も画面を更新して最後のピースを表示
+                                st.balloons()
+                                st.markdown(f'<div class="correct-msg" style="font-size:2rem;">🌈✨ {current+1}もんめ せいかい！ パズルかんせい！ ✨🌈</div>', unsafe_allow_html=True)
+                                # 全問正解時は終了画面へ（次の問題はない）
+                                st.session_state["current_q"] = total
                                 st.rerun()
                             else:
-                                # 次の問題へ（最後の問題でなければ）
+                                st.markdown('<div class="correct-msg">🎉 せいかい！ すごい！</div>', unsafe_allow_html=True)
+                                # 次の問題へ
                                 if current + 1 < total:
                                     st.session_state["current_q"] += 1
                                     st.rerun()
@@ -485,11 +486,10 @@ else:
                         st.session_state["current_q"] += 1
                         st.rerun()
         else:
-            # 全問終了
-            st.balloons()
-            
-            # 全問正解だったらシールを表示
+            # 全問終了画面
+            # 全問正解フラグが立っている場合のみシールを表示
             if st.session_state.get("all_correct", False):
+                st.balloons()  # もう一度バルーン
                 st.markdown("""
                 <div class="sticker">
                     <div style="font-size: 4rem;">🏆</div>
@@ -497,9 +497,7 @@ else:
                     <div style="font-size: 1.5rem; color: white;">⭐⭐⭐</div>
                 </div>
                 """, unsafe_allow_html=True)
-            
-            if all(st.session_state["puzzle_filled"]):
-                st.markdown("## 🎊 おめでとう！ ぜんもんせいかい！")
+                st.markdown("## 🎊 ぜんもんせいかい！ おめでとう！ 🎊")
             else:
                 st.markdown(f"## 🎊 おわり！ せいかいすう: {st.session_state['score']} / {total}")
             
