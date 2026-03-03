@@ -462,19 +462,22 @@ if st.session_state["last_stamp_date"] != today:
     else:
         st.session_state["streak"] = 1
     
-    # 今日のスタンプを押す
-    # 今日が年内何日目か（0始まり：1月1日=0）
-    day_of_year = date.today().timetuple().tm_yday - 1
-    # スタンプインデックス（0〜29）
-    stamp_index = day_of_year % 30
+    # 基準日を設定（この日を0日目とする）
+    base_date = date(2025, 1, 1)
+    today_date = date.today()
+    days_since_base = (today_date - base_date).days  # 基準日からの経過日数
+    
+    # スタンプインデックス（0〜29）を計算
+    stamp_index = days_since_base % 30
     
     # スタンプを押す（まだ押されていなければ）
     if not st.session_state["stamps"][stamp_index]:
         st.session_state["stamps"][stamp_index] = True
+        # オプション：スタンプが押されたときに小さな演出
+        # st.balloons()
     
     # 最終訪問日を更新
     st.session_state["last_stamp_date"] = today
-
 # -------------------------------
 # キャラクター情報の表示
 current_char, char_info = get_character_by_exp(st.session_state["exp"])
