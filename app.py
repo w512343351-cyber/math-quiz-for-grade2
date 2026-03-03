@@ -653,7 +653,7 @@ with st.container():
     st.markdown('</div>', unsafe_allow_html=True)
 
 # ==============================================
-# 新規作成ボタン（★ ここで古い入力をリセット）
+# 新規作成ボタン（古い入力をリセット）
 # ==============================================
 col1, col2, col3 = st.columns([1, 2, 1])
 with col2:
@@ -675,7 +675,7 @@ with col2:
             st.session_state["puzzle_pieces"] = available_emojis[:n]
             st.session_state["puzzle_filled"] = [False] * n
 
-            # ★ 以前の入力値をすべてクリア
+            # 以前の入力値をすべてクリア
             keys_to_delete = [key for key in st.session_state.keys() if key.startswith("input_")]
             for key in keys_to_delete:
                 del st.session_state[key]
@@ -805,26 +805,38 @@ else:  # チャレンジモード
                             st.session_state["current_q"] += 1
                             st.rerun()
 
-            # ---------- 時間題（选项按钮） ----------
+            # ---------- 時間題（选项按钮 - 修复版） ----------
             elif qtype == "time":
                 def generate_time_options(correct):
+                    # 确保正确答案始终在选项中
                     match = re.match(r'(\d+)時(\d+)分', correct)
                     if not match:
-                        return [correct]
+                        return [correct]  # fallback
                     hour = int(match.group(1))
                     minute = int(match.group(2))
-                    options = [correct]
-                    wrong_hours = [(hour % 12) + 1, (hour - 2) % 12 + 1]
+                    options = [correct]  # 明确包含正确答案
+                    # 生成干扰项
                     minute_choices = [0, 15, 30, 45]
+                    other_hours = [h for h in range(1, 13) if h != hour]
                     other_minutes = [m for m in minute_choices if m != minute]
-                    for h in wrong_hours:
-                        options.append(f"{h}時{minute}分")
+                    # 最多4个干扰项
+                    distractors = set()
+                    # 同小时不同分钟
                     for m in other_minutes:
-                        options.append(f"{hour}時{m}分")
-                    for h in wrong_hours[:1]:
-                        for m in other_minutes[:1]:
-                            options.append(f"{h}時{m}分")
-                    options = list(dict.fromkeys(options))
+                        distractors.add(f"{hour}時{m}分")
+                    # 不同小时同分钟
+                    for h in random.sample(other_hours, min(2, len(other_hours))):
+                        distractors.add(f"{h}時{minute}分")
+                    # 不同小时不同分钟
+                    if len(distractors) < 3:
+                        h = random.choice(other_hours)
+                        m = random.choice(other_minutes)
+                        distractors.add(f"{h}時{m}分")
+                    # 转换为列表并随机取最多3个（加上正确答案一共4个）
+                    dist_list = list(distractors)
+                    random.shuffle(dist_list)
+                    options.extend(dist_list[:3])
+                    # 确保至少有4个选项
                     while len(options) < 4:
                         rand_h = random.randint(1, 12)
                         rand_m = random.choice(minute_choices)
@@ -832,10 +844,13 @@ else:  # チャレンジモード
                         if opt not in options:
                             options.append(opt)
                     random.shuffle(options)
-                    return options[:5]
+                    return options[:4]  # 返回4个选项
 
                 time_options = generate_time_options(correct_answer)
-                # 将选项排成2列（自动换行）
+                # 确认正确答案在选项中（调试时可取消注释下一行）
+                # st.write(f"正确答案：{correct_answer}，选项：{time_options}")
+
+                # 将选项排成2列
                 cols_per_row = 2
                 for i in range(0, len(time_options), cols_per_row):
                     row_cols = st.columns(cols_per_row)
