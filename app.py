@@ -846,68 +846,86 @@ else:
                         st.session_state["current_q"] += 1
                         st.rerun()
 
-            # ---------- 数值题（数字键盘） ----------
-            else:
-                # 初始化当前输入值
-                input_key = f"input_{current}"
-                if input_key not in st.session_state:
-                    st.session_state[input_key] = ""
+# ---------- 数值题（优化后的数字键盘） ----------
+else:
+    input_key = f"input_{current}"
+    if input_key not in st.session_state:
+        st.session_state[input_key] = ""
 
-                # 显示当前答案
-                st.markdown(f'<div class="answer-display">{st.session_state[input_key] or "?"}</div>', unsafe_allow_html=True)
+    # 显示当前答案
+    st.markdown(f'<div class="answer-display">{st.session_state[input_key] or "?"}</div>', unsafe_allow_html=True)
 
-                # 数字按钮
-                cols = st.columns(5)
-                numbers = [1,2,3,4,5,6,7,8,9,0]
-                for i, num in enumerate(numbers):
-                    with cols[i % 5]:
-                        if st.button(str(num), key=f"num_{current}_{num}"):
-                            st.session_state[input_key] += str(num)
+    # 数字按钮（1-9 排列成3x3，0单独一行居中）
+    # 第一行：1 2 3
+    cols = st.columns(3)
+    for i, num in enumerate([1,2,3], 0):
+        with cols[i]:
+            if st.button(str(num), key=f"num_{current}_{num}"):
+                st.session_state[input_key] += str(num)
+                st.rerun()
+    # 第二行：4 5 6
+    cols = st.columns(3)
+    for i, num in enumerate([4,5,6], 0):
+        with cols[i]:
+            if st.button(str(num), key=f"num_{current}_{num}"):
+                st.session_state[input_key] += str(num)
+                st.rerun()
+    # 第三行：7 8 9
+    cols = st.columns(3)
+    for i, num in enumerate([7,8,9], 0):
+        with cols[i]:
+            if st.button(str(num), key=f"num_{current}_{num}"):
+                st.session_state[input_key] += str(num)
+                st.rerun()
+    # 第四行：0 居中
+    col1, col2, col3 = st.columns([1,2,1])
+    with col2:
+        if st.button("0", key=f"num_{current}_0"):
+            st.session_state[input_key] += "0"
+            st.rerun()
+
+    # 操作按钮行
+    col_del, col_clear, col_submit = st.columns(3)
+    with col_del:
+        if st.button("⌫ けす", key=f"del_{current}"):
+            st.session_state[input_key] = st.session_state[input_key][:-1]
+            st.rerun()
+    with col_clear:
+        if st.button("🗑 すべてけす", key=f"clear_{current}"):
+            st.session_state[input_key] = ""
+            st.rerun()
+    with col_submit:
+        if st.button("✅ こたえる", key=f"submit_{current}"):
+            # 提交逻辑保持不变
+            user_answer = st.session_state[input_key]
+            if user_answer:
+                if user_answer == correct_answer:
+                    # 正解处理
+                    st.session_state["score"] += 1
+                    st.session_state["puzzle_filled"][current] = True
+                    st.session_state["exp"] += 1
+                    st.markdown('<div class="star-animation">⭐</div>', unsafe_allow_html=True)
+                    if all(st.session_state["puzzle_filled"]):
+                        st.session_state["all_correct"] = True
+                        st.balloons()
+                        st.markdown(f'<div class="correct-msg" style="font-size:2rem;">🌈✨ パズルかんせい！ ✨🌈</div>', unsafe_allow_html=True)
+                        st.session_state["current_q"] = total
+                        st.rerun()
+                    else:
+                        st.markdown('<div class="correct-msg">🎉 せいかい！ すごい！</div>', unsafe_allow_html=True)
+                        if current + 1 < total:
+                            st.session_state["current_q"] += 1
                             st.rerun()
+                else:
+                    st.markdown(f'<div class="wrong-msg">😢 ざんねん... ただしいこたえは {correct_answer}</div>', unsafe_allow_html=True)
+            else:
+                st.warning("こたえをにゅうりょくしてね")
 
-                # 操作按钮
-                col_del, col_clear, col_submit = st.columns(3)
-                with col_del:
-                    if st.button("⌫ けす", key=f"del_{current}"):
-                        st.session_state[input_key] = st.session_state[input_key][:-1]
-                        st.rerun()
-                with col_clear:
-                    if st.button("🗑 すべてけす", key=f"clear_{current}"):
-                        st.session_state[input_key] = ""
-                        st.rerun()
-                with col_submit:
-                    if st.button("✅ こたえる", key=f"submit_{current}"):
-                        user_answer = st.session_state[input_key]
-                        if user_answer:
-                            if user_answer == correct_answer:
-                                # 正解
-                                st.session_state["score"] += 1
-                                st.session_state["puzzle_filled"][current] = True
-                                st.session_state["exp"] += 1
-                                st.markdown('<div class="star-animation">⭐</div>', unsafe_allow_html=True)
-                                if all(st.session_state["puzzle_filled"]):
-                                    st.session_state["all_correct"] = True
-                                    st.balloons()
-                                    st.markdown(f'<div class="correct-msg" style="font-size:2rem;">🌈✨ パズルかんせい！ ✨🌈</div>', unsafe_allow_html=True)
-                                    st.session_state["current_q"] = total
-                                    st.rerun()
-                                else:
-                                    st.markdown('<div class="correct-msg">🎉 せいかい！ すごい！</div>', unsafe_allow_html=True)
-                                    if current + 1 < total:
-                                        st.session_state["current_q"] += 1
-                                        st.rerun()
-                            else:
-                                st.markdown(f'<div class="wrong-msg">😢 ざんねん... ただしいこたえは {correct_answer}</div>', unsafe_allow_html=True)
-                                # 错误后不清空输入，方便重新输入
-                        else:
-                            st.warning("こたえをにゅうりょくしてね")
-
-                # 跳过按钮
-                if st.button("⏩ とばす", key=f"skip_num_{current}"):
-                    if current + 1 < total:
-                        st.session_state["current_q"] += 1
-                        st.rerun()
-
+    # 跳过按钮（放在下一行）
+    if st.button("⏩ とばす", key=f"skip_num_{current}"):
+        if current + 1 < total:
+            st.session_state["current_q"] += 1
+            st.rerun()
         else:
             # 全問終了画面
             if st.session_state.get("all_correct", False):
