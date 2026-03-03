@@ -2,7 +2,7 @@
 import streamlit as st
 import random
 import math
-from datetime import datetime
+from datetime import datetime, date, timedelta
 
 # -------------------------------
 # ページ設定
@@ -49,6 +49,97 @@ st.markdown("""
     .stButton > button:hover {
         transform: translateY(3px);
         box-shadow: 0 2px 0 #b13a9b;
+    }
+    /* キャラクター表示 */
+    .character-container {
+        background: linear-gradient(135deg, #fff3e6, #ffe6f0);
+        border-radius: 30px;
+        padding: 20px;
+        margin: 20px 0;
+        text-align: center;
+        border: 5px solid #ffb6c1;
+        box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+    }
+    .character-emoji {
+        font-size: 5rem;
+        animation: bounce 2s infinite;
+    }
+    @keyframes bounce {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-10px); }
+    }
+    .character-name {
+        font-size: 2rem;
+        color: #ff69b4;
+        font-weight: bold;
+    }
+    .character-message {
+        font-size: 1.2rem;
+        color: #888;
+    }
+    .exp-bar {
+        width: 100%;
+        height: 20px;
+        background-color: #f0f0f0;
+        border-radius: 10px;
+        overflow: hidden;
+        margin: 10px 0;
+    }
+    .exp-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #ffd700, #ffb347);
+        transition: width 0.5s;
+        border-radius: 10px;
+    }
+    .level-badge {
+        background: linear-gradient(45deg, #ff1493, #ff69b4);
+        color: white;
+        padding: 5px 15px;
+        border-radius: 20px;
+        display: inline-block;
+        font-size: 1.2rem;
+        margin: 10px 0;
+    }
+    /* スタンプカード */
+    .stamp-container {
+        background-color: #fff9e6;
+        border-radius: 30px;
+        padding: 20px;
+        margin: 20px 0;
+        border: 5px solid #ffd700;
+    }
+    .stamp-grid {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 10px;
+        margin: 20px 0;
+    }
+    .stamp-cell {
+        background-color: #f0f0f0;
+        border-radius: 15px;
+        padding: 15px;
+        text-align: center;
+        font-size: 2rem;
+        border: 2px dashed #aaa;
+    }
+    .stamp-cell.filled {
+        background-color: #fff3e6;
+        border: 3px solid #ffd700;
+        animation: pop 0.3s;
+    }
+    @keyframes pop {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.2); }
+        100% { transform: scale(1); }
+    }
+    .streak-badge {
+        background: linear-gradient(45deg, #ff4500, #ff8c00);
+        color: white;
+        padding: 10px 20px;
+        border-radius: 30px;
+        font-size: 1.5rem;
+        text-align: center;
+        display: inline-block;
     }
     .question-box {
         background-color: #fff3e6;
@@ -108,7 +199,6 @@ st.markdown("""
         background-color: #fff3e6;
         transform: scale(1.05);
     }
-    /* シール（金メダル）のアニメーション */
     @keyframes shine {
         0% { box-shadow: 0 0 20px gold; }
         50% { box-shadow: 0 0 40px orange; }
@@ -145,8 +235,42 @@ st.markdown("""
 # -------------------------------
 # タイトル
 st.markdown('<p class="rainbow-title">🧸 わくわく算数ランド 🎈</p>', unsafe_allow_html=True)
-st.markdown('<p class="sub-title">✨ えらんで といて まるつけ！ ✨</p>', unsafe_allow_html=True)
+st.markdown('<p class="sub-title">✨ スタンプをためて キャラクターをそだてよう！ ✨</p>', unsafe_allow_html=True)
 st.markdown("---")
+
+# -------------------------------
+# キャラクター育成設定
+CHARACTERS = {
+    "たまご": {"emoji": "🥚", "next_level": 5, "message": "まだうまれたて..."},
+    "ひよこ": {"emoji": "🐣", "next_level": 15, "message": "ぴよぴよ！ げんきいっぱい！"},
+    "にわとり": {"emoji": "🐤", "next_level": 30, "message": "こけこっこー！ まいにもれんしゅう！"},
+    "おおきなにわとり": {"emoji": "🐔", "next_level": 50, "message": "かっこいいでしょ！ さんすうはかせ！"},
+    "フェニックス": {"emoji": "🦅", "next_level": 100, "message": "でんせつのとり！ もうこわいものなし！"},
+}
+
+def get_character_by_exp(exp):
+    if exp < 5:
+        return "たまご", CHARACTERS["たまご"]
+    elif exp < 15:
+        return "ひよこ", CHARACTERS["ひよこ"]
+    elif exp < 30:
+        return "にわとり", CHARACTERS["にわとり"]
+    elif exp < 50:
+        return "おおきなにわとり", CHARACTERS["おおきなにわとり"]
+    else:
+        return "フェニックス", CHARACTERS["フェニックス"]
+
+def get_next_level_exp(exp):
+    if exp < 5:
+        return 5
+    elif exp < 15:
+        return 15
+    elif exp < 30:
+        return 30
+    elif exp < 50:
+        return 50
+    else:
+        return 100
 
 # -------------------------------
 # サイドバー（設定）
@@ -157,7 +281,7 @@ with st.sidebar:
     # モード選択
     mode = st.radio(
         "あそびかたをえらんでね",
-        options=["📋 れんしゅうモード（いちらんひょうじ）", "🎯 チャレンジモード（1もんずつこたえる）"],
+        options=["📋 れんしゅうモード", "🎯 チャレンジモード"],
         index=0
     )
     
@@ -193,7 +317,6 @@ with st.sidebar:
         diff_level = "2桁（あり）"
     
     st.markdown("---")
-    # 練習モード用：答え表示
     if "れんしゅう" in mode:
         show_answers = st.toggle("✨ こたえをみる", value=True)
 
@@ -210,17 +333,11 @@ EMOJI_LIST = [
     "🕊️", "🐇", "🦝", "🦔", "🦦", "🦥", "🐁", "🐀", "🐿️", "🦔",
     "🍎", "🍐", "🍊", "🍋", "🍌", "🍉", "🍇", "🍓", "🫐", "🍈",
     "🍒", "🍑", "🥭", "🍍", "🥥", "🥝", "🍅", "🍆", "🥑", "🥦",
-    "🥬", "🥒", "🌶️", "🫑", "🌽", "🥕", "🫒", "🧄", "🧅", "🥔",
-    "🍠", "🥐", "🥯", "🍞", "🥖", "🥨", "🧀", "🥚", "🍳", "🧈",
-    "🥞", "🧇", "🥓", "🥩", "🍗", "🍖", "🦴", "🌭", "🍔", "🍟",
-    "🍕", "🫓", "🥪", "🥙", "🧆", "🌮", "🌯", "🫔", "🥗", "🥘",
-    "🫕", "🥫", "🍝", "🍜", "🍲", "🍛", "🍣", "🍱", "🥟", "🍤",
-    "🍙", "🍚", "🍘", "🍥", "🥠", "🥮", "🍡", "🍧", "🍨", "🍦",
-    "🍰", "🎂", "🧁", "🍫", "🍬", "🍭", "🍮", "🍯", "🍼", "🥛"
+    "🥬", "🥒", "🌶️", "🫑", "🌽", "🥕", "🫒", "🧄", "🧅", "🥔"
 ]
 
 # -------------------------------
-# 問題生成関数
+# 問題生成関数（変更なし）
 def generate_question(types, difficulty):
     q_type = random.choice(types)
     
@@ -323,7 +440,73 @@ if "questions" not in st.session_state:
     st.session_state["answered"] = [False] * 30
     st.session_state["puzzle_pieces"] = []
     st.session_state["puzzle_filled"] = []
-    st.session_state["all_correct"] = False   # 全問正解フラグ
+    st.session_state["all_correct"] = False
+    
+    # キャラクター育成用
+    st.session_state["exp"] = 0
+    st.session_state["prev_character"] = "たまご"
+    
+    # スタンプカード用
+    st.session_state["stamps"] = [False] * 30  # 30日分のスタンプ
+    st.session_state["last_stamp_date"] = None
+    st.session_state["streak"] = 0
+
+# -------------------------------
+# スタンプカードの更新（ログイン時）
+today = date.today().isoformat()
+if st.session_state["last_stamp_date"] != today:
+    # 連続記録のチェック
+    if st.session_state["last_stamp_date"] == (date.today() - timedelta(days=1)).isoformat():
+        st.session_state["streak"] += 1
+    else:
+        st.session_state["streak"] = 1
+    
+    # 今日のスタンプを押す（まだ押していない場合）
+    day_of_year = date.today().timetuple().tm_yday - 1  # 0始まり
+    stamp_index = day_of_year % 30  # 30日周期で循環
+    st.session_state["stamps"][stamp_index] = True
+    st.session_state["last_stamp_date"] = today
+
+# -------------------------------
+# キャラクター情報の表示
+current_char, char_info = get_character_by_exp(st.session_state["exp"])
+next_level_exp = get_next_level_exp(st.session_state["exp"])
+exp_percentage = min(100, (st.session_state["exp"] / next_level_exp) * 100)
+
+# レベルアップチェック
+if current_char != st.session_state["prev_character"]:
+    st.balloons()
+    st.session_state["prev_character"] = current_char
+
+# キャラクター表示
+with st.container():
+    st.markdown('<div class="character-container">', unsafe_allow_html=True)
+    col1, col2 = st.columns([1, 2])
+    with col1:
+        st.markdown(f'<div class="character-emoji">{char_info["emoji"]}</div>', unsafe_allow_html=True)
+    with col2:
+        st.markdown(f'<div class="character-name">✨ {current_char} ✨</div>', unsafe_allow_html=True)
+        st.markdown(f'<div class="character-message">{char_info["message"]}</div>', unsafe_allow_html=True)
+        st.markdown(f'<div class="level-badge">レベル {st.session_state["exp"]} / {next_level_exp}</div>', unsafe_allow_html=True)
+        st.markdown(f'<div class="exp-bar"><div class="exp-fill" style="width: {exp_percentage}%;"></div></div>', unsafe_allow_html=True)
+    st.markdown('</div>', unsafe_allow_html=True)
+
+# -------------------------------
+# スタンプカード表示
+st.markdown('<div class="stamp-container">', unsafe_allow_html=True)
+st.markdown(f"### 📅 まいにちスタンプ  🔥 {st.session_state['streak']}にちれんぞく")
+
+# スタンプグリッドの表示
+cols_per_row = 7
+for i in range(0, len(st.session_state["stamps"]), cols_per_row):
+    cols = st.columns(cols_per_row)
+    for j in range(cols_per_row):
+        idx = i + j
+        if idx < len(st.session_state["stamps"]):
+            stamp_class = "stamp-cell filled" if st.session_state["stamps"][idx] else "stamp-cell"
+            stamp_content = "🌸" if st.session_state["stamps"][idx] else "❓"
+            cols[j].markdown(f'<div class="{stamp_class}">{stamp_content}</div>', unsafe_allow_html=True)
+st.markdown('</div>', unsafe_allow_html=True)
 
 # -------------------------------
 # 新規作成ボタン
@@ -461,17 +644,18 @@ else:
                             st.session_state["score"] += 1
                             st.session_state["puzzle_filled"][current] = True
                             
-                            # 全問正解チェック（ここでチェック）
+                            # 経験値加算（正解で+1）
+                            st.session_state["exp"] += 1
+                            
+                            # 全問正解チェック
                             if all(st.session_state["puzzle_filled"]):
                                 st.session_state["all_correct"] = True
                                 st.balloons()
-                                st.markdown(f'<div class="correct-msg" style="font-size:2rem;">🌈✨ {current+1}もんめ せいかい！ パズルかんせい！ ✨🌈</div>', unsafe_allow_html=True)
-                                # 全問正解時は終了画面へ（次の問題はない）
+                                st.markdown(f'<div class="correct-msg" style="font-size:2rem;">🌈✨ パズルかんせい！ ✨🌈</div>', unsafe_allow_html=True)
                                 st.session_state["current_q"] = total
                                 st.rerun()
                             else:
                                 st.markdown('<div class="correct-msg">🎉 せいかい！ すごい！</div>', unsafe_allow_html=True)
-                                # 次の問題へ
                                 if current + 1 < total:
                                     st.session_state["current_q"] += 1
                                     st.rerun()
@@ -487,9 +671,8 @@ else:
                         st.rerun()
         else:
             # 全問終了画面
-            # 全問正解フラグが立っている場合のみシールを表示
             if st.session_state.get("all_correct", False):
-                st.balloons()  # もう一度バルーン
+                st.balloons()
                 st.markdown("""
                 <div class="sticker">
                     <div style="font-size: 4rem;">🏆</div>
@@ -511,4 +694,4 @@ else:
 
 # -------------------------------
 st.markdown("---")
-st.markdown('<div class="footer">🧸 わくわく算数ランド | たのしくまなぼう！</div>', unsafe_allow_html=True)
+st.markdown('<div class="footer">🧸 わくわく算数ランド | まいにちあそんで キャラクターをそだてよう！</div>', unsafe_allow_html=True)
