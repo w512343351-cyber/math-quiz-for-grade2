@@ -2,6 +2,7 @@
 import streamlit as st
 import random
 import math
+import re
 from datetime import datetime
 
 # -------------------------------
@@ -51,22 +52,22 @@ st.markdown("""
         font-weight: normal;
     }
 
+    /* ボタン全体のスタイル（大きくポップに） */
     .stButton > button {
         background: linear-gradient(145deg, #ff9ff3, #feca57);
         color: white;
-        font-size: 1.5rem;
+        font-size: 1.8rem !important;
         font-weight: bold;
-        border-radius: 60px;
+        border-radius: 60px !important;
         border: 3px solid white;
-        padding: 0.5rem 2rem;
+        padding: 0.5rem 0.2rem !important;
         box-shadow: 0 8px 0 #b13a9b, 0 10px 20px rgba(0,0,0,0.1);
         transition: 0.1s ease;
         width: 100%;
-        max-width: 350px;
-        margin: 0 auto;
+        height: 3.8rem !important;
+        line-height: 1.2 !important;
         letter-spacing: 2px;
     }
-
     .stButton > button:hover {
         transform: translateY(4px);
         box-shadow: 0 4px 0 #b13a9b, 0 10px 20px rgba(0,0,0,0.1);
@@ -194,6 +195,17 @@ st.markdown("""
         font-size: 2rem;
         text-align: center;
         box-shadow: 0 15px 0 #b13a9b, 0 20px 30px rgba(0,0,0,0.1);
+    }
+
+    /* 答案显示框 */
+    .answer-display {
+        background: #fff9e6;
+        border: 5px solid #ff9ff3;
+        border-radius: 30px;
+        font-size: 2.5rem;
+        text-align: center;
+        padding: 15px;
+        margin: 15px 0;
     }
 
     .correct-msg {
@@ -354,7 +366,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # -------------------------------
-# タイトル（unsafe_allow_html=True 付き）
+# タイトル
 st.markdown('<p class="rainbow-title">🧸 わくわく算数ランド 🎈</p>', unsafe_allow_html=True)
 st.markdown('<p class="sub-title">✨ キャラクターをそだてながら さんすうれんしゅう！ ✨</p>', unsafe_allow_html=True)
 st.markdown("---")
@@ -401,7 +413,6 @@ with st.sidebar:
     st.markdown("## 🎮 ゲームせってい")
     st.markdown("---")
 
-    # モード選択
     mode = st.radio(
         "あそびかたをえらんでね",
         options=["📋 れんしゅうモード", "🎯 チャレンジモード"],
@@ -485,7 +496,7 @@ def generate_question(types, difficulty):
         else:
             a = random.randint(10, 99)
             b = random.randint(10, 99)
-        return f"{a} + {b} = ?", str(a + b)
+        return f"{a} + {b} = ?", str(a + b), "number"
 
     elif q_type == "subtraction":
         if difficulty == "1桁のみ":
@@ -499,12 +510,12 @@ def generate_question(types, difficulty):
         else:
             a = random.randint(10, 99)
             b = random.randint(1, a)
-        return f"{a} - {b} = ?", str(a - b)
+        return f"{a} - {b} = ?", str(a - b), "number"
 
     elif q_type == "multiplication":
         a = random.randint(1, 9)
         b = random.randint(1, 9)
-        return f"{a} × {b} = ?", str(a * b)
+        return f"{a} × {b} = ?", str(a * b), "number"
 
     elif q_type == "compare":
         a = random.randint(1, 100)
@@ -520,20 +531,20 @@ def generate_question(types, difficulty):
                 a, b = b - 1, b
         else:
             b = a
-        return f"{a} □ {b} （にあてはまる記号 >, <, = を答えましょう）", op
+        return f"{a} □ {b} （にあてはまる記号 >, <, = を答えましょう）", op, "compare"
 
     elif q_type == "length":
         if random.choice([True, False]):
             meters = random.randint(1, 5)
-            return f"{meters} m = □ cm", str(meters * 100)
+            return f"{meters} m = □ cm", str(meters * 100), "number"
         else:
             cm = random.choice([100, 200, 300, 400, 500, 600, 700, 800, 900])
-            return f"{cm} cm = □ m", str(cm // 100) if cm % 100 == 0 else f"{cm/100:.1f}"
+            return f"{cm} cm = □ m", str(cm // 100) if cm % 100 == 0 else f"{cm/100:.1f}", "number"
 
     elif q_type == "time":
         hour = random.randint(1, 12)
         minute = random.choice([0, 15, 30, 45])
-        return f"時計の針が {hour} 時 {minute} 分をさしています。時刻は？", f"{hour}時{minute}分"
+        return f"時計の針が {hour} 時 {minute} 分をさしています。時刻は？", f"{hour}時{minute}分", "time"
 
 def generate_worksheet():
     selected_types = []
@@ -552,14 +563,15 @@ def generate_worksheet():
 
     if not selected_types:
         st.warning("⚠️ 1つ以上のけいさんをえらんでね！")
-        return [], []
+        return [], [], []
 
-    questions, answers = [], []
+    questions, answers, qtypes = [], [], []
     for _ in range(int(num_questions)):
-        q, a = generate_question(selected_types, diff_level)
+        q, a, t = generate_question(selected_types, diff_level)
         questions.append(q)
         answers.append(a)
-    return questions, answers
+        qtypes.append(t)
+    return questions, answers, qtypes
 
 # ==============================================
 # セッション状態の初期化
@@ -567,6 +579,7 @@ def generate_worksheet():
 if "questions" not in st.session_state:
     st.session_state["questions"] = []
     st.session_state["answers"] = []
+    st.session_state["qtypes"] = []
     st.session_state["current_q"] = 0
     st.session_state["score"] = 0
     st.session_state["answered"] = [False] * 30
@@ -627,10 +640,11 @@ with st.container():
 col1, col2, col3 = st.columns([1, 2, 1])
 with col2:
     if st.button("🎲 もんだいをあたらしくつくる"):
-        q_list, a_list = generate_worksheet()
+        q_list, a_list, t_list = generate_worksheet()
         if q_list:
             st.session_state["questions"] = q_list
             st.session_state["answers"] = a_list
+            st.session_state["qtypes"] = t_list
             st.session_state["current_q"] = 0
             st.session_state["score"] = 0
             st.session_state["answered"] = [False] * len(q_list)
@@ -681,6 +695,7 @@ else:
     else:
         q_list = st.session_state["questions"]
         a_list = st.session_state["answers"]
+        t_list = st.session_state["qtypes"]
         total = len(q_list)
         current = st.session_state["current_q"]
         filled = st.session_state["puzzle_filled"]
@@ -727,36 +742,25 @@ else:
         if current < total:
             st.markdown(f'<div class="question-box">🔢 {q_list[current]}</div>', unsafe_allow_html=True)
 
-            if "□" in q_list[current] and "記号" in q_list[current]:
+            qtype = t_list[current]
+            correct_answer = a_list[current]
+
+            # ---------- 比較題（＞＜＝） ----------
+            if qtype == "compare":
                 user_answer = st.radio(
                     "ふごうをえらんでね",
                     options=[">", "<", "="],
                     horizontal=True,
                     key=f"q_{current}"
                 )
-            else:
-                user_answer = st.text_input("こたえをにゅうりょくしてね", key=f"q_{current}", value="")
-
-            col1, col2 = st.columns(2)
-            with col1:
                 if st.button("✅ こたえる", key=f"btn_{current}"):
                     if user_answer:
-                        is_correct = False
-                        if "記号" in q_list[current]:
-                            is_correct = (user_answer == a_list[current])
-                        else:
-                            user_clean = user_answer.strip().replace(" ", "")
-                            correct_clean = a_list[current].strip().replace(" ", "")
-                            is_correct = (user_clean == correct_clean)
-
-                        if is_correct:
+                        if user_answer == correct_answer:
+                            # 正解処理
                             st.session_state["score"] += 1
                             st.session_state["puzzle_filled"][current] = True
                             st.session_state["exp"] += 1
-
-                            # スターアニメーション
                             st.markdown('<div class="star-animation">⭐</div>', unsafe_allow_html=True)
-
                             if all(st.session_state["puzzle_filled"]):
                                 st.session_state["all_correct"] = True
                                 st.balloons()
@@ -769,15 +773,141 @@ else:
                                     st.session_state["current_q"] += 1
                                     st.rerun()
                         else:
-                            st.markdown(f'<div class="wrong-msg">😢 ざんねん... ただしいこたえは {a_list[current]}</div>', unsafe_allow_html=True)
+                            st.markdown(f'<div class="wrong-msg">😢 ざんねん... ただしいこたえは {correct_answer}</div>', unsafe_allow_html=True)
                     else:
-                        st.warning("こたえをにゅうりょくしてね")
-
-            with col2:
-                if st.button("⏩ とばす"):
+                        st.warning("ふごうをえらんでね")
+                if st.button("⏩ とばす", key=f"skip_{current}"):
                     if current + 1 < total:
                         st.session_state["current_q"] += 1
                         st.rerun()
+
+            # ---------- 時間題（选项按钮） ----------
+            elif qtype == "time":
+                # 生成选项
+                def generate_time_options(correct):
+                    match = re.match(r'(\d+)時(\d+)分', correct)
+                    if not match:
+                        return [correct]
+                    hour = int(match.group(1))
+                    minute = int(match.group(2))
+                    options = [correct]
+                    # 错误小时
+                    wrong_hours = [(hour % 12) + 1, (hour - 2) % 12 + 1]
+                    # 分钟候选
+                    minute_choices = [0,15,30,45]
+                    other_minutes = [m for m in minute_choices if m != minute]
+                    for h in wrong_hours:
+                        options.append(f"{h}時{minute}分")
+                    for m in other_minutes:
+                        options.append(f"{hour}時{m}分")
+                    for h in wrong_hours[:1]:
+                        for m in other_minutes[:1]:
+                            options.append(f"{h}時{m}分")
+                    # 去重并保证至少4个
+                    options = list(dict.fromkeys(options))
+                    while len(options) < 4:
+                        rand_h = random.randint(1,12)
+                        rand_m = random.choice(minute_choices)
+                        opt = f"{rand_h}時{rand_m}分"
+                        if opt not in options:
+                            options.append(opt)
+                    random.shuffle(options)
+                    return options[:5]
+
+                time_options = generate_time_options(correct_answer)
+                cols = st.columns(len(time_options))
+                option_clicked = False
+                for i, opt in enumerate(time_options):
+                    with cols[i]:
+                        if st.button(opt, key=f"time_opt_{current}_{i}"):
+                            if opt == correct_answer:
+                                # 正解
+                                st.session_state["score"] += 1
+                                st.session_state["puzzle_filled"][current] = True
+                                st.session_state["exp"] += 1
+                                st.markdown('<div class="star-animation">⭐</div>', unsafe_allow_html=True)
+                                if all(st.session_state["puzzle_filled"]):
+                                    st.session_state["all_correct"] = True
+                                    st.balloons()
+                                    st.markdown(f'<div class="correct-msg" style="font-size:2rem;">🌈✨ パズルかんせい！ ✨🌈</div>', unsafe_allow_html=True)
+                                    st.session_state["current_q"] = total
+                                    st.rerun()
+                                else:
+                                    st.markdown('<div class="correct-msg">🎉 せいかい！ すごい！</div>', unsafe_allow_html=True)
+                                    if current + 1 < total:
+                                        st.session_state["current_q"] += 1
+                                        st.rerun()
+                            else:
+                                st.markdown(f'<div class="wrong-msg">😢 ざんねん... ただしいこたえは {correct_answer}</div>', unsafe_allow_html=True)
+                                # 错误后自动跳到下一题？为了保持一致性，这里先不跳，让孩子自己点跳过按钮。
+                                # 但为了不卡住，提供一个跳过按钮
+                if st.button("⏩ とばす", key=f"skip_time_{current}"):
+                    if current + 1 < total:
+                        st.session_state["current_q"] += 1
+                        st.rerun()
+
+            # ---------- 数值题（数字键盘） ----------
+            else:
+                # 初始化当前输入值
+                input_key = f"input_{current}"
+                if input_key not in st.session_state:
+                    st.session_state[input_key] = ""
+
+                # 显示当前答案
+                st.markdown(f'<div class="answer-display">{st.session_state[input_key] or "?"}</div>', unsafe_allow_html=True)
+
+                # 数字按钮
+                cols = st.columns(5)
+                numbers = [1,2,3,4,5,6,7,8,9,0]
+                for i, num in enumerate(numbers):
+                    with cols[i % 5]:
+                        if st.button(str(num), key=f"num_{current}_{num}"):
+                            st.session_state[input_key] += str(num)
+                            st.rerun()
+
+                # 操作按钮
+                col_del, col_clear, col_submit = st.columns(3)
+                with col_del:
+                    if st.button("⌫ けす", key=f"del_{current}"):
+                        st.session_state[input_key] = st.session_state[input_key][:-1]
+                        st.rerun()
+                with col_clear:
+                    if st.button("🗑 すべてけす", key=f"clear_{current}"):
+                        st.session_state[input_key] = ""
+                        st.rerun()
+                with col_submit:
+                    if st.button("✅ こたえる", key=f"submit_{current}"):
+                        user_answer = st.session_state[input_key]
+                        if user_answer:
+                            if user_answer == correct_answer:
+                                # 正解
+                                st.session_state["score"] += 1
+                                st.session_state["puzzle_filled"][current] = True
+                                st.session_state["exp"] += 1
+                                st.markdown('<div class="star-animation">⭐</div>', unsafe_allow_html=True)
+                                if all(st.session_state["puzzle_filled"]):
+                                    st.session_state["all_correct"] = True
+                                    st.balloons()
+                                    st.markdown(f'<div class="correct-msg" style="font-size:2rem;">🌈✨ パズルかんせい！ ✨🌈</div>', unsafe_allow_html=True)
+                                    st.session_state["current_q"] = total
+                                    st.rerun()
+                                else:
+                                    st.markdown('<div class="correct-msg">🎉 せいかい！ すごい！</div>', unsafe_allow_html=True)
+                                    if current + 1 < total:
+                                        st.session_state["current_q"] += 1
+                                        st.rerun()
+                            else:
+                                st.markdown(f'<div class="wrong-msg">😢 ざんねん... ただしいこたえは {correct_answer}</div>', unsafe_allow_html=True)
+                                # 错误后不清空输入，方便重新输入
+                        else:
+                            st.warning("こたえをにゅうりょくしてね")
+
+                # 跳过按钮
+                if st.button("⏩ とばす", key=f"skip_num_{current}"):
+                    if current + 1 < total:
+                        st.session_state["current_q"] += 1
+                        st.rerun()
+
         else:
             # 全問終了画面
             if st.session_state.get("all_correct", False):
@@ -802,15 +932,14 @@ else:
                 st.rerun()
 
 # ==============================================
-# 右下キャラクターコレクション（既に育成したキャラをすべて表示）
+# 右下キャラクターコレクション
 # ==============================================
 unlocked_emojis = []
 for name, data in CHARACTERS.items():
     if st.session_state["character_collection"].get(name, 0) > 0:
         unlocked_emojis.append(data["emoji"])
-
 if not unlocked_emojis:
-    unlocked_emojis = ["🥚"]  # 初期状態
+    unlocked_emojis = ["🥚"]
 
 emojis_html = "".join([f'<span>{emoji}</span>' for emoji in unlocked_emojis])
 st.markdown(f"""
