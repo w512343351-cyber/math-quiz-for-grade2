@@ -456,15 +456,23 @@ if "questions" not in st.session_state:
 today = date.today().isoformat()
 if st.session_state["last_stamp_date"] != today:
     # 連続記録のチェック
-    if st.session_state["last_stamp_date"] == (date.today() - timedelta(days=1)).isoformat():
+    yesterday = (date.today() - timedelta(days=1)).isoformat()
+    if st.session_state["last_stamp_date"] == yesterday:
         st.session_state["streak"] += 1
     else:
         st.session_state["streak"] = 1
     
-    # 今日のスタンプを押す（まだ押していない場合）
-    day_of_year = date.today().timetuple().tm_yday - 1  # 0始まり
-    stamp_index = day_of_year % 30  # 30日周期で循環
-    st.session_state["stamps"][stamp_index] = True
+    # 今日のスタンプを押す
+    # 今日が年内何日目か（0始まり：1月1日=0）
+    day_of_year = date.today().timetuple().tm_yday - 1
+    # スタンプインデックス（0〜29）
+    stamp_index = day_of_year % 30
+    
+    # スタンプを押す（まだ押されていなければ）
+    if not st.session_state["stamps"][stamp_index]:
+        st.session_state["stamps"][stamp_index] = True
+    
+    # 最終訪問日を更新
     st.session_state["last_stamp_date"] = today
 
 # -------------------------------
