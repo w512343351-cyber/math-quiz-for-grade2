@@ -108,6 +108,31 @@ st.markdown("""
         background-color: #fff3e6;
         transform: scale(1.05);
     }
+    /* シール（金メダル）のアニメーション */
+    @keyframes shine {
+        0% { box-shadow: 0 0 20px gold; }
+        50% { box-shadow: 0 0 40px orange; }
+        100% { box-shadow: 0 0 20px gold; }
+    }
+    .sticker {
+        background: linear-gradient(145deg, #ffd700, #ffb347);
+        border-radius: 50%;
+        width: 200px;
+        height: 200px;
+        margin: 20px auto;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        box-shadow: 0 10px 20px rgba(0,0,0,0.3), inset 0 -5px 10px rgba(0,0,0,0.2);
+        border: 5px solid white;
+        animation: shine 1.5s infinite;
+    }
+    .sticker-text {
+        font-size: 2rem;
+        color: white;
+        text-shadow: 2px 2px 0 #b37400;
+    }
     .footer {
         text-align: center;
         color: #aaa;
@@ -195,7 +220,7 @@ EMOJI_LIST = [
 ]
 
 # -------------------------------
-# 問題生成関数（変更なし）
+# 問題生成関数
 def generate_question(types, difficulty):
     q_type = random.choice(types)
     
@@ -296,20 +321,11 @@ if "questions" not in st.session_state:
     st.session_state["current_q"] = 0
     st.session_state["score"] = 0
     st.session_state["answered"] = [False] * 30
-    st.session_state["puzzle_pieces"] = []   # 各ピースの絵文字（問題数分）
-    st.session_state["puzzle_filled"] = []   # 各ピースが埋まったかどうか
-
-# -------------------------------
-# メイン処理
-if "questions" not in st.session_state:
-    st.session_state["questions"] = []
-    st.session_state["answers"] = []
-    st.session_state["current_q"] = 0
-    st.session_state["score"] = 0
-    st.session_state["answered"] = [False] * 30
     st.session_state["puzzle_pieces"] = []
     st.session_state["puzzle_filled"] = []
+    st.session_state["all_correct"] = False   # 全問正解フラグ
 
+# -------------------------------
 # 新規作成ボタン
 col1, col2, col3 = st.columns([1, 2, 1])
 with col2:
@@ -321,10 +337,10 @@ with col2:
             st.session_state["current_q"] = 0
             st.session_state["score"] = 0
             st.session_state["answered"] = [False] * len(q_list)
+            st.session_state["all_correct"] = False
             
             # パズル用のデータを初期化
             n = len(q_list)
-            # 問題数分の異なる絵文字をランダムに選ぶ（重複なし）
             available_emojis = EMOJI_LIST.copy()
             random.shuffle(available_emojis)
             st.session_state["puzzle_pieces"] = available_emojis[:n]
@@ -379,7 +395,6 @@ else:
         # -------------------------------
         # パズル表示（問題数に合わせてグリッドサイズを計算）
         if total > 0:
-            # グリッドの列数を決める（できるだけ正方形に近く）
             cols = math.ceil(math.sqrt(total))
             rows = math.ceil(total / cols)
             
@@ -387,7 +402,6 @@ else:
             with st.container():
                 st.markdown('<div class="puzzle-container">', unsafe_allow_html=True)
                 
-                # CSSでグリッドを定義
                 grid_style = f"""
                 <style>
                 .puzzle-grid-{total} {{
@@ -400,13 +414,12 @@ else:
                 """
                 st.markdown(grid_style, unsafe_allow_html=True)
                 
-                # グリッドを描画
                 html = f'<div class="puzzle-grid puzzle-grid-{total}">'
                 for i in range(total):
                     cell_class = "puzzle-cell filled" if filled[i] else "puzzle-cell"
                     content = pieces[i] if filled[i] else "❓"
                     html += f'<div class="{cell_class}">{content}</div>'
-                # 余ったセルは空白で埋める（グリッドを整えるため）
+                # 余ったセルは空白で埋める
                 for i in range(total, rows * cols):
                     html += f'<div class="puzzle-cell" style="visibility: hidden;"></div>'
                 html += '</div>'
@@ -446,26 +459,23 @@ else:
                         if is_correct:
                             # 正解処理
                             st.session_state["score"] += 1
-                            st.session_state["puzzle_filled"][current] = True  # 現在の問題のピースを埋める
+                            st.session_state["puzzle_filled"][current] = True
                             st.markdown('<div class="correct-msg">🎉 せいかい！ すごい！</div>', unsafe_allow_html=True)
                             
                             # 全問正解チェック
                             if all(st.session_state["puzzle_filled"]):
                                 st.balloons()
+                                st.session_state["all_correct"] = True
                                 st.markdown('<div class="correct-msg" style="font-size:2rem;">🌈✨ パズルかんせい！ やったね！ ✨🌈</div>', unsafe_allow_html=True)
-                            
-                            # 次の問題へ
-                            if current + 1 < total:
-                                st.session_state["current_q"] += 1
+                                # 全問正解時も画面を更新して最後のピースを表示
                                 st.rerun()
+                            else:
+                                # 次の問題へ（最後の問題でなければ）
+                                if current + 1 < total:
+                                    st.session_state["current_q"] += 1
+                                    st.rerun()
                         else:
                             st.markdown(f'<div class="wrong-msg">😢 ざんねん... ただしいこたえは {a_list[current]}</div>', unsafe_allow_html=True)
-                            
-                            # 間違えても次の問題に進める（再挑戦できるように）
-                            # 必要ならここで再試行させてもよいが、今回は進むだけにする
-                            # if current + 1 < total:
-                            #     st.session_state["current_q"] += 1
-                            #     st.rerun()
                     else:
                         st.warning("こたえをにゅうりょくしてね")
             
@@ -477,15 +487,28 @@ else:
         else:
             # 全問終了
             st.balloons()
+            
+            # 全問正解だったらシールを表示
+            if st.session_state.get("all_correct", False):
+                st.markdown("""
+                <div class="sticker">
+                    <div style="font-size: 4rem;">🏆</div>
+                    <div class="sticker-text">よくできました！</div>
+                    <div style="font-size: 1.5rem; color: white;">⭐⭐⭐</div>
+                </div>
+                """, unsafe_allow_html=True)
+            
             if all(st.session_state["puzzle_filled"]):
                 st.markdown("## 🎊 おめでとう！ ぜんもんせいかい！")
             else:
                 st.markdown(f"## 🎊 おわり！ せいかいすう: {st.session_state['score']} / {total}")
+            
             if st.button("🔄 もういちど"):
                 st.session_state["current_q"] = 0
                 st.session_state["score"] = 0
                 st.session_state["answered"] = [False] * total
                 st.session_state["puzzle_filled"] = [False] * total
+                st.session_state["all_correct"] = False
                 st.rerun()
 
 # -------------------------------
